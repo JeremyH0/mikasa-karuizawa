@@ -1,0 +1,335 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+/* ==========================================================================
+   DESIGN TOKENS
+   ==========================================================================
+   Palette sampled directly from "Mikasa marketing material.pdf":
+     bone    #F2F1EC  the off-white panel behind the Old Karuizawa copy (p.1)
+     forest  #3A4133  the dark olive panel on the Land / Master Plan pages
+     brass   #B9A57C  the four feature icons and the hairline rules
+     ink     #26261F  headline and body text
+     stone   #8A897E  captions, table labels, small print
+
+   Type is deliberately NOT hc-property's: Marcellus for display, Manrope for
+   UI/body, against that site's Cormorant Garamond + Plus Jakarta Sans. Two
+   separate properties under one vendor should not read as the same listing.
+   Both are self-hosted — see fonts.css for why that is non-negotiable. */
+
+@theme {
+  --font-sans: "Manrope Variable", sans-serif;
+  --font-serif: "Marcellus", serif;
+
+  --color-bone: #f2f1ec;
+  --color-bone-dim: #e7e5dd;
+  --color-forest: #3a4133;
+  --color-forest-deep: #2a2f25;
+  --color-brass: #b9a57c;
+  --color-brass-dim: #a08c63;
+
+  /* ------------------------------------------------------------------
+     NAV GOLD — a matched PAIR, not one colour.
+     ------------------------------------------------------------------
+     The header is transparent, so its text is the only thing carrying
+     legibility. It stays gold throughout and swaps lightness to suit
+     whatever is beneath it — light gold over the dark sections, deep gold
+     over the light ones.
+
+     One gold cannot do both. The brand brass (#B9A57C) measures 4.40:1 on
+     forest and only 2.13:1 on bone; the second number is unreadable. Both
+     values below clear WCAG AA (4.5:1), which matters here more than usual
+     because the links are 11px uppercase on wide tracking — thin
+     letterforms are exactly the case that limit exists for.
+
+                          on forest   on forest-deep
+       --brass-nav          4.82          6.24
+                          on bone     on bone-dim
+       --brass-deep         5.34          4.79
+
+     Keep both above 4.5 if these are ever retuned. bone-dim is the tighter
+     constraint on the deep gold — the Location section uses it. */
+  --color-brass-nav: #c0ad86;
+  --color-brass-deep: #756033;
+  --color-ink: #26261f;
+  --color-stone: #8a897e;
+
+  /* One shared easing so every transition on the site decelerates
+     identically. Slow-out is what reads as "expensive". */
+  --ease-estate: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   CJK TYPOGRAPHY
+   ==========================================================================
+   Marcellus and Manrope have no CJK glyphs, so the JP/ZH
+   pages need a second family for those codepoints.
+
+   Those come from the READER'S DEVICE, not a webfont, and that is deliberate.
+   One weight of one Noto CJK family is ~3.5 MB across 124 files; the set this
+   design calls for would add roughly 73 MB to the repo and to every deploy.
+   Every device that can read Japanese or Chinese already ships good fonts for
+   it, so we use those: nothing to download, nothing to block, and CJK text
+   paints on the first frame.
+
+   That also means NOTHING on any page is fetched from Google.
+   fonts.googleapis.com is blocked in mainland China — and because a
+   stylesheet <link> is render-blocking, a Simplified Chinese page that
+   requested one would hang until the request timed out. This one never asks.
+
+   The Latin faces stay FIRST in each stack on purpose: Latin letters and
+   numerals still render in Marcellus/Manrope, and only the codepoints those
+   fonts lack fall through. Mixed strings like "2,926.84㎡" or
+   "Hirafu Capital GK" keep the English page's exact look.
+
+   These selectors beat @theme's :root (0,1,1 vs 0,1,0), so they win
+   regardless of stylesheet order. Layout.astro sets data-cjk. */
+
+/* Japanese — Mincho for headings, Gothic for body, matching the serif/sans
+   split of the Latin design. */
+html[data-cjk="ja"] {
+  --font-sans: "Manrope Variable", "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Yu Gothic Medium", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+  --font-serif: "Marcellus", "Hiragino Mincho ProN", "Yu Mincho",
+    "YuMincho", "Noto Serif JP", "MS PMincho", serif;
+}
+
+/* Simplified Chinese */
+html[data-cjk="zh-Hans"] {
+  --font-sans: "Manrope Variable", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-serif: "Marcellus", "Songti SC", "SimSun", "Noto Serif SC",
+    serif;
+}
+
+/* Traditional Chinese */
+html[data-cjk="zh-Hant"] {
+  --font-sans: "Manrope Variable", "PingFang TC", "Microsoft JhengHei",
+    "Noto Sans TC", sans-serif;
+  --font-serif: "Marcellus", "Songti TC", "PMingLiU", "Noto Serif TC",
+    serif;
+}
+
+/* CJK has no case, so `uppercase` is a no-op on it — but the wide tracking
+   that flatters small Latin caps pushes CJK characters apart until a label
+   stops reading as one word. Halve it for CJK only; Latin runs inside the
+   same label (brand names, "m²") are unaffected because tracking applies
+   per-character. */
+html[data-cjk] :is(.tracking-widest, .tracking-\[0\.2em\], .tracking-\[0\.3em\], .tracking-\[0\.4em\]) {
+  letter-spacing: 0.05em;
+}
+
+/* Japanese and Chinese have no inter-word spaces, so lines may break at any
+   character. Keep breaks off punctuation and stop orphaned marks. */
+html[data-cjk] {
+  line-break: strict;
+  overflow-wrap: break-word;
+}
+
+/* The display face is set very large and widely tracked. Marcellus's Latin
+   capitals carry that; CJK glyphs at the same optical size read heavy and
+   cramped, so ease the leading back out on CJK headings only. */
+html[data-cjk] .display {
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+html {
+  /* Lenis drives scrolling; native smooth-scroll would fight it. Anchor jumps
+     are handled by Lenis in motion.ts instead. */
+  scroll-behavior: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-brass);
+  color: var(--color-bone);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 3px;
+}
+
+/* The display class carries the deck's signature: an inscriptional serif with
+   generous letter-spacing, set large and ranged left.
+
+   font-weight MUST stay 400 — Marcellus ships exactly one cut. Asking for 300
+   or 600 makes the browser synthesise one, which smears the stroke contrast
+   that is the whole reason this face was chosen. Marcellus also sits optically
+   heavier than Cormorant did at the same size, so the tracking is opened
+   slightly to keep the airiness of the deck. */
+.display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0.075em;
+  line-height: 1.2;
+}
+
+/* Small caps label used above every section heading. */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-brass-dim);
+}
+
+/* ==========================================================================
+   LENIS
+   ========================================================================== */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   MOTION PRIMITIVES
+   ==========================================================================
+   Every animated element declares its intent with a data attribute and starts
+   from its hidden state HERE, in CSS — not in JS. That ordering matters: if
+   the start state were applied by script, the element would paint visible for
+   one frame and then jump. Setting it in the stylesheet means the first paint
+   is already correct.
+
+   The corollary is that JS MUST run to undo it. Two escape hatches guarantee
+   the page is readable regardless:
+     1. <noscript> in Layout.astro reveals everything.
+     2. motion.ts adds .motion-ready to <html> on boot; if GSAP fails to load
+        or the browser is too old, the class never lands and the fallback
+        below keeps content visible. */
+
+/* Default: content is visible. Only once JS confirms it can animate do the
+   hidden start states apply. */
+html.motion-ready [data-animate],
+html.motion-ready [data-hero],
+html.motion-ready [data-parallax-img] {
+  opacity: 0;
+}
+
+html.motion-ready [data-animate] {
+  transform: translate3d(0, 32px, 0);
+}
+
+html.motion-ready [data-hero] {
+  transform: translate3d(0, 24px, 0);
+}
+
+/* Masked line reveal. Each line sits inside an overflow-hidden mask so it
+   slides up from behind a hard edge rather than fading in place. */
+.line-mask {
+  display: block;
+  overflow: hidden;
+}
+
+html.motion-ready .line-mask > span {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+}
+
+/* Curtain wipe for images: the clip path opens from the bottom edge. */
+html.motion-ready [data-reveal-img] {
+  clip-path: inset(0 0 100% 0);
+}
+
+/* The SVG site plan draws itself. pathLength="1" on the <path> normalises the
+   geometry so the dash values are fractions, independent of real path length. */
+html.motion-ready [data-draw] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ==========================================================================
+   A hard override rather than a shorter duration. Someone who sets this may
+   be doing it for vestibular reasons; a 200 ms parallax is still parallax.
+   Everything lands in its final state immediately, and Lenis is never
+   started (see motion.ts). */
+
+@media (prefers-reduced-motion: reduce) {
+  html.motion-ready [data-animate],
+  html.motion-ready [data-hero],
+  html.motion-ready [data-parallax-img] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  html.motion-ready .line-mask > span {
+    transform: none !important;
+  }
+
+  html.motion-ready [data-reveal-img] {
+    clip-path: none !important;
+  }
+
+  html.motion-ready [data-draw] {
+    stroke-dashoffset: 0 !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   PRINT
+   ==========================================================================
+   Agents print these pages to PDF for buyers. Drop the fixed chrome, force
+   every animated element visible, and keep sections off page breaks. */
+
+@media print {
+  [data-nav],
+  [data-scroll-cue],
+  [data-lang-prompt] {
+    display: none !important;
+  }
+
+  [data-animate],
+  [data-hero],
+  .line-mask > span,
+  [data-reveal-img] {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  section {
+    break-inside: avoid;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

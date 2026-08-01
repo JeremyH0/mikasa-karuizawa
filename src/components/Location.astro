@@ -1,0 +1,177 @@
+---
+// Page 2: the illustrated Karuizawa map with its three labelled points.
+//
+// The pins are positioned as percentages OVER the map image rather than being
+// baked into it, so they stay crisp at any zoom, animate independently, and —
+// critically — remain real translatable text instead of pixels. Their
+// coordinates match the deck's artwork; if the map is ever re-drawn at a
+// different crop, these three numbers are the only thing to re-tune.
+import Figure from './Figure.astro';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const pins = [
+    { key: 'site', label: t.location.pins.site, x: 30, y: 22, primary: true },
+    { key: 'ginza', label: t.location.pins.ginza, x: 57, y: 62, primary: false },
+    { key: 'station', label: t.location.pins.station, x: 63, y: 86, primary: false },
+];
+
+const times = [
+    t.location.times.ginza,
+    t.location.times.station,
+    t.location.times.tokyo,
+    t.location.times.haneda,
+] as Array<{ label: string; value: string; via?: string }>;
+---
+
+<section id="location" class="bg-bone-dim/60 py-24 md:py-32 lg:py-40">
+    <div class="mx-auto max-w-[1600px] px-6 md:px-10 lg:px-14">
+        <div class="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] lg:gap-20 xl:gap-28">
+            {/* Copy column */}
+            <div class="lg:sticky lg:top-32 lg:self-start">
+                <p data-animate class="eyebrow">{t.location.eyebrow}</p>
+
+                <h2 data-lines class="display mt-6 max-w-[15ch] text-[clamp(1.75rem,3.4vw,2.9rem)]">
+                    <span class="line-mask"><span>{t.location.heading}</span></span>
+                </h2>
+
+                <div data-animate data-animate-delay="0.1" class="mt-10 h-px w-16 bg-brass" aria-hidden="true"></div>
+
+                <p
+                    data-animate
+                    data-animate-delay="0.15"
+                    class="mt-10 max-w-[44ch] text-[0.95rem] leading-[1.85] text-ink/75"
+                >
+                    {t.location.body}
+                </p>
+
+                <dl class="mt-14 border-t border-ink/12">
+                    {times.map((item, i) => (
+                        <div
+                            data-animate
+                            data-animate-delay={String(0.2 + i * 0.06)}
+                            class="flex items-baseline justify-between gap-6 border-b border-ink/12 py-5"
+                        >
+                            <dt class="text-[0.9rem] text-ink/75">
+                                {item.label}
+                                {item.via && (
+                                    <span class="mt-1 block text-[0.7rem] tracking-[0.08em] text-stone">
+                                        {item.via}
+                                    </span>
+                                )}
+                            </dt>
+                            <dd class="shrink-0 font-serif text-lg tracking-[0.08em] text-ink">
+                                {item.value}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+
+                <p data-animate data-animate-delay="0.45" class="mt-5 text-[0.7rem] leading-relaxed text-stone">
+                    {t.location.note}
+                </p>
+            </div>
+
+            {/* Map column */}
+            <div data-animate data-animate-delay="0.1" class="relative">
+                <div class="relative">
+                    <Figure
+                        src="/images/location-map.jpg"
+                        alt={t.location.mapAlt}
+                        width={1600}
+                        height={1300}
+                        tone="stone"
+                        class="w-full"
+                        imgClass="h-full w-full object-cover"
+                    />
+
+                    {/* Pin overlay. aria-hidden because every label is already
+                        in the map's alt text and the travel-time list — a
+                        screen reader announcing them twice adds nothing. */}
+                    <div class="absolute inset-0" aria-hidden="true">
+                        {pins.map((pin, i) => (
+                            <div
+                                class="pin absolute"
+                                style={`left:${pin.x}%; top:${pin.y}%; --pin-delay:${0.4 + i * 0.22}s`}
+                            >
+                                {pin.primary ? (
+                                    <div class="flex items-center gap-3">
+                                        <span class="pin-mark relative flex h-9 w-9 items-center justify-center rounded-full border border-brass bg-bone shadow-[0_6px_24px_-6px_rgba(38,38,31,0.55)]">
+                                            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-brass">
+                                                <path d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2Z" />
+                                            </svg>
+                                            <span class="pin-pulse absolute inset-0 rounded-full border border-brass"></span>
+                                        </span>
+                                        <span class="whitespace-nowrap bg-forest/90 px-3 py-1.5 text-[0.7rem] tracking-[0.1em] text-bone backdrop-blur-sm">
+                                            {pin.label}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <span class="whitespace-nowrap bg-forest/80 px-3 py-1.5 text-[0.65rem] tracking-[0.1em] text-bone/90 backdrop-blur-sm">
+                                        {pin.label}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Pins drop in on a stagger driven by the inline --pin-delay. Kept in CSS
+       rather than GSAP because they are purely decorative and should not cost
+       a ScrollTrigger each. */
+    .pin {
+        transform: translate(-10%, -50%);
+        opacity: 0;
+        animation: pin-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation-delay: var(--pin-delay, 0s);
+    }
+
+    @keyframes pin-in {
+        from {
+            opacity: 0;
+            transform: translate(-10%, calc(-50% - 14px));
+        }
+        to {
+            opacity: 1;
+            transform: translate(-10%, -50%);
+        }
+    }
+
+    .pin-pulse {
+        animation: pin-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pin-pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        70%,
+        100% {
+            transform: scale(2.1);
+            opacity: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pin {
+            opacity: 1;
+            animation: none;
+        }
+        .pin-pulse {
+            animation: none;
+            opacity: 0;
+        }
+    }
+</style>

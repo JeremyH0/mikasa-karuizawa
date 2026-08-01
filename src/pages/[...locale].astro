@@ -1,0 +1,76 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.astro';
+import LanguagePrompt from '../components/LanguagePrompt.astro';
+import Hero from '../components/Hero.astro';
+import Overview from '../components/Overview.astro';
+import Location from '../components/Location.astro';
+import Land from '../components/Land.astro';
+import Concept from '../components/Concept.astro';
+import Inquiry from '../components/Inquiry.astro';
+import Footer from '../components/Footer.astro';
+import { locales, localePath, useTranslations, type Locale } from '../i18n';
+
+// ==========================================
+// LOCALIZED ROUTES
+// ==========================================
+// One source file builds every language version, so the markup, the motion
+// hooks and the site-plan geometry exist exactly once. Adding a language means
+// adding a dictionary — nothing here changes.
+//
+//   en       -> /            ja       -> /jp/
+//   zh-Hans  -> /zh/         zh-Hant  -> /zh-hant/
+//
+// Built from `locales`, which is the publish switch in i18n/config.ts: set it
+// to ['en'] and this route emits only the English page.
+export function getStaticPaths() {
+    return locales.map((locale) => ({
+        // An undefined rest param builds the root path for the default locale.
+        params: { locale: localePath[locale] || undefined },
+        props: { locale },
+    }));
+}
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<Layout locale={locale} ogImage="/images/hero-forest.jpg" ogImageAlt={t.hero.alt}>
+    <Navigation locale={locale} />
+
+    {/*
+        SECTION ORDER — this sequence is deliberate, in two ways.
+
+        Narrative: the page opens with atmosphere (where this is, what it
+        could be), then delivers the facts (what you are buying, where it
+        sits), then asks for the enquiry. Concept before Land means a buyer
+        has seen the vision before meeting the zoning table.
+
+        Tonal: Hero, Overview and Concept are all dark, so the woodland
+        carries unbroken from the first screen. Land is the hinge — dark
+        panel on the left, bone on the right — and from Location onward the
+        page is light. Dark → hinge → light, closing on the dark footer.
+        Reordering these means re-checking that run.
+    */}
+    <main id="main">
+        <Hero locale={locale} />
+        <Overview locale={locale} />
+        <Concept locale={locale} />
+        <Land locale={locale} />
+        <Location locale={locale} />
+        <Inquiry locale={locale} />
+    </main>
+
+    <Footer locale={locale} />
+
+    {/* Guarded HERE, not just inside the component. Astro bundles a rendered
+        component's <style> and <script> even when its markup evaluates to
+        nothing, so an internal guard alone would still ship the prompt's CSS
+        and its listener to an English-only build. Not rendering it at all
+        drops both. */}
+    {locales.length > 1 && <LanguagePrompt locale={locale} />}
+</Layout>

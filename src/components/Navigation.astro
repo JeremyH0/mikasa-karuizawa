@@ -1,0 +1,360 @@
+---
+// Transparent sticky header. Text colour adapts to whatever is beneath it:
+// motion.ts toggles `is-over-dark` while a [data-nav-dark] section is under
+// the bar, and `is-scrolled` once past the hero.
+import { locales, localeName, localeShort, localeHref, useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+// Must mirror the section order in pages/[...locale].astro — the nav is a
+// map of the page, and a link order that disagrees with the scroll order
+// makes the anchors feel like they jump backwards.
+const sections = [
+    { id: 'overview', label: t.nav.overview },
+    { id: 'concept', label: t.nav.concept },
+    { id: 'land', label: t.nav.land },
+    { id: 'location', label: t.nav.location },
+];
+
+// Only offer a switcher when there is somewhere to switch to. An English-only
+// build (locales = ['en']) drops the control and its script entirely rather
+// than rendering a dropdown with one item.
+const showLanguages = locales.length > 1;
+---
+
+<header
+    data-nav
+    class="fixed inset-x-0 top-0 z-50"
+>
+    <div class="nav-bar mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5 transition-[padding] duration-500 ease-[var(--ease-estate)] md:px-10 lg:px-14">
+        <a
+            href="#top"
+            class="nav-ink nav-mark group flex flex-col leading-none transition-[color,text-shadow] duration-500"
+        >
+            <span class="font-serif text-base tracking-[0.28em] md:text-lg">OLD KARUIZAWA</span>
+            <span class="mt-1 text-[0.6rem] tracking-[0.4em] opacity-70 md:text-[0.65rem]">MIKASA</span>
+        </a>
+
+        <nav class="hidden items-center gap-9 lg:flex" aria-label={t.nav.menuDialogLabel}>
+            {sections.map((s) => (
+                <a
+                    href={`#${s.id}`}
+                    class="nav-ink relative text-[0.7rem] tracking-[0.22em] uppercase transition-colors duration-500 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-0 after:bg-current after:transition-[width] after:duration-500 after:ease-[var(--ease-estate)] hover:after:w-full"
+                >
+                    {s.label}
+                </a>
+            ))}
+
+            {showLanguages && (
+                <div class="relative" data-lang-menu>
+                    <button
+                        type="button"
+                        class="nav-ink flex items-center gap-2 text-[0.7rem] tracking-[0.22em] uppercase transition-colors duration-500"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        aria-label={t.nav.langLabel}
+                        data-lang-toggle
+                    >
+                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
+                        </svg>
+                        {localeShort[locale]}
+                    </button>
+
+                    <div
+                        class="invisible absolute right-0 top-full mt-4 min-w-[9.5rem] translate-y-1 border border-ink/10 bg-bone opacity-0 shadow-[0_20px_50px_-20px_rgba(38,38,31,0.4)] transition-all duration-300 ease-[var(--ease-estate)]"
+                        data-lang-panel
+                    >
+                        {locales.map((l) => (
+                            <a
+                                href={localeHref(l)}
+                                hreflang={l}
+                                lang={l}
+                                aria-current={l === locale ? 'true' : undefined}
+                                class:list={[
+                                    'block px-5 py-3 text-xs tracking-[0.12em] transition-colors duration-200 hover:bg-bone-dim',
+                                    l === locale ? 'text-brass-dim' : 'text-ink/70',
+                                ]}
+                            >
+                                {localeName[l]}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <a
+                href="#inquire"
+                class="nav-border border px-6 py-2.5 text-[0.7rem] tracking-[0.22em] uppercase transition-colors duration-500"
+            >
+                {t.nav.inquire}
+            </a>
+        </nav>
+
+        <button
+            type="button"
+            class="nav-ink flex h-10 w-10 items-center justify-center transition-colors duration-500 lg:hidden"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+            aria-label={t.nav.menuLabel}
+            data-menu-toggle
+        >
+            <span class="relative block h-3 w-6">
+                <span class="absolute left-0 top-0 h-px w-full bg-current transition-transform duration-400 ease-[var(--ease-estate)]" data-bar-top></span>
+                <span class="absolute bottom-0 left-0 h-px w-full bg-current transition-transform duration-400 ease-[var(--ease-estate)]" data-bar-bottom></span>
+            </span>
+        </button>
+    </div>
+</header>
+
+{/* Fullscreen mobile menu. Hidden from the a11y tree until opened so the links
+    are not reachable by screen reader or Tab while off-screen. */}
+<div
+    id="mobile-menu"
+    class="fixed inset-0 z-40 flex translate-y-[-100%] flex-col justify-center bg-forest px-8 transition-transform duration-700 ease-[var(--ease-estate)] lg:hidden"
+    inert
+    data-mobile-menu
+>
+    <nav class="flex flex-col gap-7" aria-label={t.nav.menuDialogLabel}>
+        {sections.map((s) => (
+            <a href={`#${s.id}`} class="font-serif text-3xl tracking-[0.1em] text-bone" data-menu-link>
+                {s.label}
+            </a>
+        ))}
+        <a href="#inquire" class="font-serif text-3xl tracking-[0.1em] text-brass" data-menu-link>
+            {t.nav.inquire}
+        </a>
+    </nav>
+
+    {showLanguages && (
+        <div class="mt-14 flex flex-wrap gap-3 border-t border-bone/15 pt-8">
+            {locales.map((l) => (
+                <a
+                    href={localeHref(l)}
+                    hreflang={l}
+                    lang={l}
+                    aria-current={l === locale ? 'true' : undefined}
+                    class:list={[
+                        'border px-4 py-2 text-xs tracking-[0.14em] transition-colors',
+                        l === locale
+                            ? 'border-brass text-brass'
+                            : 'border-bone/25 text-bone/70 hover:border-bone/60',
+                    ]}
+                >
+                    {localeName[l]}
+                </a>
+            ))}
+        </div>
+    )}
+
+    <p class="mt-10 text-[0.65rem] tracking-[0.3em] uppercase text-bone/40">{t.nav.placeLine}</p>
+</div>
+
+<style>
+    /* ==================================================================
+       TRANSPARENT HEADER
+       ==================================================================
+       The bar never paints a background. Legibility comes entirely from
+       the text colour, which flips to match whatever is beneath it —
+       motion.ts reads each section's data-nav-dark and toggles the
+       classes below.
+
+       THREE STATES, chosen by measurement rather than taste:
+
+         light section   → --color-ink      black
+         flat green      → --color-brass-nav  gold
+         photography     → --color-bone     white
+
+       Why gold is not used over photographs. Gold only clears WCAG AA on a
+       flat, known background; on the greens it measures 4.82 and 6.24 with
+       no help at all. Over the actual plates in this project it measures
+       1.2–1.3 — invisible — and pulling it up to 4.5 needs a 58–73% black
+       scrim over the image. Bone needs 31–56% for the same result. There is
+       no hue that fixes this; only a scrim does, and gold demands roughly
+       twice as much of one as bone.
+
+       So gold gets the green, where it is free, and bone covers the one
+       section that is genuinely a photograph (the hero). Anywhere a plate
+       would otherwise pass beneath the bar on a GOLD section, the fix is
+       applied to the image — see Overview.astro and Concept.astro — not by
+       compromising the text colour.
+
+       THE SPLIT-SECTION PROBLEM
+       Most sections are one tone across their full width, so one flip
+       for the whole bar is right. The Land section is not: on desktop
+       it is a dark spec panel on the LEFT and bone on the RIGHT. Flipping
+       the whole bar to bone there would put bone links on a bone
+       background — invisible. Leaving it dark would put ink on forest —
+       also unreadable.
+
+       So data-nav-dark takes an optional side: `data-nav-dark="left"`
+       flips only the wordmark, and the links keep their dark ink. Each
+       half of the bar then contrasts against its own half of the page.
+       ================================================================== */
+
+    /* Default — over the light sections: black. Flat backgrounds, so no
+       shadow is needed and none is used. */
+    :global([data-nav]) .nav-ink {
+        color: var(--color-ink);
+        text-shadow: none;
+    }
+    :global([data-nav]) .nav-border {
+        color: var(--color-ink);
+        border-color: color-mix(in srgb, var(--color-ink) 25%, transparent);
+    }
+    :global([data-nav]) .nav-border:hover {
+        background-color: var(--color-ink);
+        color: var(--color-bone);
+    }
+
+    /* Over a full-width dark band (hero, overview, concept, footer) — flip to
+       the nav gold rather than bone. See --color-brass-nav in global.css for
+       why it is two steps lighter than the brand brass: the brass proper
+       measures 4.40:1 on forest and misses AA for 11px text.
+
+       Gold sits much closer to the background than bone did (4.8:1 against
+       9.4:1), so the shadow does more work here and is a little stronger. */
+    :global([data-nav].is-over-dark) .nav-ink,
+    :global([data-nav].is-over-dark-left) .nav-mark {
+        color: var(--color-brass-nav);
+        text-shadow: 0 1px 16px rgb(0 0 0 / 0.34);
+    }
+    :global([data-nav].is-over-dark) .nav-border {
+        color: var(--color-brass-nav);
+        border-color: color-mix(in srgb, var(--color-brass-nav) 45%, transparent);
+    }
+    :global([data-nav].is-over-dark) .nav-border:hover {
+        background-color: var(--color-brass-nav);
+        color: var(--color-forest-deep);
+    }
+
+    /* Over photography: bone, with a layered shadow. The tight 2px pass
+       defines the letter edges against a bright patch; the wide 18px pass
+       lifts the whole word off a busy one. Bone wins here on measurement,
+       not preference — see the note at the top of this block. */
+    :global([data-nav].is-over-photo) .nav-ink {
+        color: var(--color-bone);
+        /* A single tight pass — enough to hold the glyph edges against
+           foliage, deliberately NOT the wide halo used before. That halo read
+           as a black smudge behind the text; this is invisible as a shadow.
+           The colour switch inside the hero does the real work now, so the
+           shadow only has to cover the dark forest, never blown-out sky. */
+        text-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+    }
+    :global([data-nav].is-over-photo) .nav-border {
+        color: var(--color-bone);
+        border-color: color-mix(in srgb, var(--color-bone) 40%, transparent);
+    }
+    :global([data-nav].is-over-photo) .nav-border:hover {
+        background-color: var(--color-bone);
+        color: var(--color-ink);
+    }
+
+    /* The split only exists on desktop. Below lg the Land grid stacks, so
+       that panel spans the full width and the whole bar must flip — leaving
+       the burger ink-on-forest would make it disappear. */
+    @media (width < 64rem) {
+        :global([data-nav].is-over-dark-left) .nav-ink {
+            color: var(--color-brass-nav);
+            text-shadow: 0 1px 16px rgb(0 0 0 / 0.34);
+        }
+        :global([data-nav].is-over-dark-left) .nav-border {
+            color: var(--color-brass-nav);
+            border-color: color-mix(in srgb, var(--color-brass-nav) 45%, transparent);
+        }
+    }
+
+    /* Scrolled: no background, no border — only the bar tightening very
+       slightly. Enough to register as a state change without ever
+       covering the page. */
+    :global([data-nav].is-scrolled) .nav-bar {
+        padding-top: 0.9rem;
+        padding-bottom: 0.9rem;
+    }
+
+    /* Open state for the mobile menu. */
+    :global([data-mobile-menu].is-open) {
+        transform: translateY(0);
+    }
+</style>
+
+<script>
+    // --- Language dropdown ---------------------------------------------------
+    const langMenu = document.querySelector<HTMLElement>('[data-lang-menu]');
+    const langToggle = document.querySelector<HTMLButtonElement>('[data-lang-toggle]');
+    const langPanel = document.querySelector<HTMLElement>('[data-lang-panel]');
+
+    if (langMenu && langToggle && langPanel) {
+        const setOpen = (open: boolean) => {
+            langToggle.setAttribute('aria-expanded', String(open));
+            langPanel.classList.toggle('invisible', !open);
+            langPanel.classList.toggle('opacity-0', !open);
+            langPanel.classList.toggle('translate-y-1', !open);
+        };
+
+        langToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setOpen(langToggle.getAttribute('aria-expanded') !== 'true');
+        });
+
+        // Close on outside click and on Escape, so the panel can never be
+        // orphaned open over the page.
+        document.addEventListener('click', (e) => {
+            if (!langMenu.contains(e.target as Node)) setOpen(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') setOpen(false);
+        });
+    }
+
+    // --- Mobile menu ---------------------------------------------------------
+    const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const mobileMenu = document.querySelector<HTMLElement>('[data-mobile-menu]');
+    const barTop = document.querySelector<HTMLElement>('[data-bar-top]');
+    const barBottom = document.querySelector<HTMLElement>('[data-bar-bottom]');
+
+    if (menuToggle && mobileMenu) {
+        const setMenu = (open: boolean) => {
+            menuToggle.setAttribute('aria-expanded', String(open));
+            mobileMenu.classList.toggle('is-open', open);
+
+            // `inert` keeps the off-screen panel out of the tab order and the
+            // accessibility tree; toggling only a transform would leave the
+            // links focusable while invisible.
+            if (open) mobileMenu.removeAttribute('inert');
+            else mobileMenu.setAttribute('inert', '');
+
+            // Lenis owns scrolling, so document.body.style.overflow alone is
+            // not enough to lock the page behind the menu.
+            const lenis = (window as any).lenis;
+            if (lenis) open ? lenis.stop() : lenis.start();
+            document.body.style.overflow = open ? 'hidden' : '';
+
+            if (barTop && barBottom) {
+                barTop.style.transform = open ? 'translateY(5.5px) rotate(45deg)' : '';
+                barBottom.style.transform = open ? 'translateY(-5.5px) rotate(-45deg)' : '';
+            }
+        };
+
+        menuToggle.addEventListener('click', () =>
+            setMenu(menuToggle.getAttribute('aria-expanded') !== 'true')
+        );
+
+        mobileMenu.querySelectorAll('[data-menu-link]').forEach((link) => {
+            link.addEventListener('click', () => setMenu(false));
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && menuToggle.getAttribute('aria-expanded') === 'true') {
+                setMenu(false);
+                menuToggle.focus();
+            }
+        });
+    }
+</script>

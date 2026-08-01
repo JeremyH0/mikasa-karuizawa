@@ -1,0 +1,150 @@
+---
+// First-visit language suggestion.
+//
+// A SUGGESTION, never a redirect. Auto-redirecting on Accept-Language is the
+// usual approach and it is wrong here: a Japanese-speaking agent who deliberately
+// sends the English page to an overseas buyer would watch it bounce to /jp/,
+// and search crawlers that follow it can end up indexing the wrong language at
+// the canonical URL.
+//
+// So the page the visitor asked for always stays on screen. This bar offers
+// the alternative and remembers the answer either way.
+import { locales, localeHref, localeName, useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// Nothing to suggest on a single-locale build. Guarded by wrapping the markup
+// below rather than by an early return — returning a Response works in a page
+// but NOT in a component, where it would be silently rendered as a string.
+const enabled = locales.length > 1;
+
+// Every locale's prompt copy is emitted as data, because the visitor we want
+// to reach is by definition the one who cannot read the current page. The
+// banner has to address them in THEIR language, so the strings for all
+// locales ship and the script picks the right one at runtime.
+const prompts = enabled
+    ? locales.map((l) => {
+          const dict = useTranslations(l);
+          return {
+              locale: l,
+              href: localeHref(l),
+              name: localeName[l],
+              message: dict.langPrompt.message,
+              accept: dict.langPrompt.accept,
+              dismiss: dict.langPrompt.dismiss,
+          };
+      })
+    : [];
+---
+
+{
+    enabled && (
+        <div
+            data-lang-prompt
+            data-current={locale}
+            data-prompts={JSON.stringify(prompts)}
+            hidden
+            class="fixed inset-x-0 bottom-0 z-[60] translate-y-full border-t border-ink/10 bg-bone/95 backdrop-blur-md transition-transform duration-700 ease-[var(--ease-estate)]"
+        >
+            <div class="mx-auto flex max-w-4xl flex-col items-center gap-4 px-6 py-5 sm:flex-row sm:justify-between">
+                <p class="text-sm text-ink/80" data-prompt-message />
+                <div class="flex shrink-0 items-center gap-3">
+                    <a
+                        href="/"
+                        class="border border-ink/25 px-5 py-2.5 text-xs tracking-[0.16em] transition-colors hover:bg-ink hover:text-bone"
+                        data-prompt-accept
+                    />
+                    <button
+                        type="button"
+                        class="px-2 py-2.5 text-xs tracking-[0.16em] text-ink/50 underline-offset-4 transition-colors hover:text-ink hover:underline"
+                        data-prompt-dismiss
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+<style>
+    :global([data-lang-prompt].is-visible) {
+        transform: translateY(0);
+    }
+</style>
+
+<script>
+    import { localeFromNavigator } from '../i18n/config';
+
+    const STORAGE_KEY = 'mikasa:lang-choice';
+
+    const el = document.querySelector<HTMLElement>('[data-lang-prompt]');
+    if (el) {
+        type Prompt = {
+            locale: string;
+            href: string;
+            name: string;
+            message: string;
+            accept: string;
+            dismiss: string;
+        };
+
+        const current = el.dataset.current ?? 'en';
+        const prompts: Prompt[] = JSON.parse(el.dataset.prompts ?? '[]');
+
+        // Suppressed once the visitor has answered — either by choosing a
+        // language or by dismissing. Private-mode Safari throws on access, so
+        // storage is always guarded; failing to read just means we ask again.
+        const stored = (() => {
+            try {
+                return localStorage.getItem(STORAGE_KEY);
+            } catch {
+                return null;
+            }
+        })();
+
+        const remember = (value: string) => {
+            try {
+                localStorage.setItem(STORAGE_KEY, value);
+            } catch {
+                /* storage unavailable — the prompt simply reappears next visit */
+            }
+        };
+
+        const suggested = localeFromNavigator(navigator.language);
+        const match = prompts.find((p) => p.locale === suggested);
+
+        // Only speak up when the browser's language is one we publish AND it
+        // is not the page already on screen.
+        if (!stored && match && suggested !== current) {
+            const message = el.querySelector<HTMLElement>('[data-prompt-message]');
+            const accept = el.querySelector<HTMLAnchorElement>('[data-prompt-accept]');
+            const dismiss = el.querySelector<HTMLButtonElement>('[data-prompt-dismiss]');
+
+            if (message && accept && dismiss) {
+                // The banner speaks the SUGGESTED language, not the page's.
+                el.lang = match.locale;
+                message.textContent = match.message;
+                accept.textContent = match.accept;
+                accept.href = match.href;
+                dismiss.textContent = match.dismiss;
+
+                accept.addEventListener('click', () => remember(match.locale));
+                dismiss.addEventListener('click', () => {
+                    remember(current);
+                    el.classList.remove('is-visible');
+                    // Leave the transition time to finish before hiding.
+                    setTimeout(() => (el.hidden = true), 700);
+                });
+
+                el.hidden = false;
+                // Next frame, so the transform transition actually runs.
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => el.classList.add('is-visible'))
+                );
+            }
+        }
+    }
+</script>

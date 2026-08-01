@@ -1,0 +1,116 @@
+# Apache config for Xserver.
+#
+# This file is copied verbatim into dist/ by Astro and lands in the docroot on
+# deploy. scripts/deploy.sh may append a Basic Auth block to the DEPLOYED copy
+# for staging builds — never edit that in here, or it would lock production the
+# moment the site is promoted.
+
+# ---------------------------------------------------------------------------
+# HTTPS + canonical host
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Xserver terminates TLS upstream, so %{HTTPS} is not reliable — it reports
+    # "off" on a request that reached the browser over HTTPS. The forwarded
+    # header is what actually reflects the client connection.
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+    # Drop www. Comment out if the canonical host should keep it — but pick one
+    # and stay with it, because `site` in astro.config.mjs must match or every
+    # canonical tag will point at a redirect.
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Compression
+# ---------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+    # woff2 is already Brotli-compressed internally; deflating it again costs
+    # CPU and grows the payload, so it is deliberately absent from this list.
+</IfModule>
+
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/xml
+    AddOutputFilterByType BROTLI_COMPRESS application/javascript application/json
+    AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Caching
+# ---------------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Astro fingerprints everything under /_astro/, so those are immutable.
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+
+    # Images live at stable paths under /images/ and are NOT fingerprinted, so
+    # a year would strand a replaced photograph in every visitor's cache.
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType image/webp "access plus 7 days"
+    ExpiresByType image/avif "access plus 7 days"
+    ExpiresByType image/svg+xml "access plus 7 days"
+
+    # HTML must always revalidate or a content fix never reaches anyone.
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    <FilesMatch "\.html$">
+        Header set Cache-Control "public, max-age=0, must-revalidate"
+    </FilesMatch>
+
+    # --- Security headers ---
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+
+    # This site loads no third-party anything: fonts are self-hosted, CJK comes
+    # from system fonts, there is no analytics tag and no embedded map. So the
+    # policy can be strict. 'unsafe-inline' for style-src is required by
+    # Astro's scoped-style attributes; script-src does NOT need it because the
+    # only inline script is the motion primer, which is hashed below.
+    #
+    # ⚠ Adding Google Analytics, a map embed or a font CDN means editing this.
+    # Note that a font CDN would also break the mainland-China guarantee.
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# MIME types
+# ---------------------------------------------------------------------------
+<IfModule mod_mime.c>
+    AddType font/woff2 .woff2
+    AddType image/avif .avif
+    AddType image/webp .webp
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Hardening
+# ---------------------------------------------------------------------------
+Options -Indexes
+
+# Block dotfiles. .well-known stays reachable so ACME/TLS renewal keeps working.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule "(^|/)\.(?!well-known)" - [F]
+</IfModule>
+
+ErrorDocument 404 /404.html

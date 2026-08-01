@@ -1,0 +1,138 @@
+---
+// Page 1 of the deck: the full-bleed forest plate with the headline ranged
+// left over it.
+//
+// The headline is split into lines HERE, in the dictionary, rather than by a
+// runtime text-splitter. Two reasons: the split survives with JS disabled, and
+// each language controls its own line breaks — the English breaks after
+// "estate" and "Japan's", but the Japanese and Chinese lines break at
+// completely different points and a character-count splitter would put them
+// in the wrong place.
+import Figure from './Figure.astro';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
+---
+
+{/* No data-nav-dark on the section itself — the hero is not one tone.
+
+    Measured down the plate, the header band changes character as it scrolls:
+    the top is blown-out sky (dark text reads 8.6:1, white reads 1.0), the
+    lower two-thirds is dark forest (white reads 6.6–10.1, dark reads 1.0).
+    A single colour cannot serve both, which is why the earlier scrim existed.
+
+    With the plate left clean, the header flips inside the hero instead: it
+    keeps the default dark ink over the sky, and the sentinel below switches
+    it to bone once forest fills the band. */}
+<section id="top" class="relative h-[100svh] min-h-[38rem] w-full overflow-hidden bg-forest-deep">
+    <Figure
+        src="/images/hero-forest.jpg"
+        alt={t.hero.alt}
+        width={2560}
+        height={1440}
+        loading="eager"
+        fetchpriority="high"
+        tone="forest"
+        class="absolute inset-0 h-full w-full"
+        imgClass="h-full w-full object-cover"
+        data-hero-img
+    />
+
+    {/* Bottom-weighted scrim, anchoring the headline. */}
+    <div
+        class="pointer-events-none absolute inset-0"
+        style="background: linear-gradient(to top, rgba(26,29,22,0.82) 0%, rgba(26,29,22,0.35) 42%, rgba(26,29,22,0.04) 78%, rgba(26,29,22,0.10) 100%);"
+    >
+    </div>
+
+    {/* NO top scrim here, deliberately — the plate is left clean.
+
+        Trade-off worth knowing if the header ever looks marginal on this
+        section: the sky is blown to near-white in places, so bone header text
+        measures ~1.0:1 there on the raw image. It stays readable only because
+        the `is-over-photo` state in Navigation.astro carries a two-pass text
+        shadow, which builds contrast around the glyph edges instead of
+        darkening the photograph.
+
+        That is a perceptual fix, not a measured one — WCAG gives no credit
+        for text shadow. If AA compliance over the hero is ever required,
+        restore a ~64% top scrim over the first 11rem; that measured 5.0:1. */}
+
+    {/* Colour sentinel — invisible, no layout, no paint.
+
+        Marks where the header band stops being sky and starts being forest,
+        so the bar switches from ink to bone at the right moment. 34% is just
+        past the horizon haze; measured, the band is decisively dark by ~45%
+        and decisively bright above ~15%.
+
+        Between roughly 23% and 40% the image is mid-tone and NEITHER colour
+        clears AA — that is inherent to a clean plate and is the cost of
+        having no scrim. The switch is placed inside that window so the
+        crossfade happens while contrast is weakest, which is also when the
+        text is moving fastest and least likely to be read. */}
+    <div
+        data-nav-dark="photo"
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 bottom-0 top-[34%]"
+    >
+    </div>
+
+    <div class="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col justify-end px-6 pb-24 md:px-10 md:pb-28 lg:px-14 lg:pb-32">
+        <p data-hero class="eyebrow mb-7 text-brass">{t.hero.eyebrow}</p>
+
+        <h1
+            data-hero-lines
+            class="display max-w-[22ch] text-bone text-[clamp(1.9rem,5.2vw,4.35rem)]"
+        >
+            {lines.map((line) => (
+                <span class="line-mask"><span>{line}</span></span>
+            ))}
+        </h1>
+
+        <div data-hero class="mt-12 flex items-end justify-between gap-8">
+            <div class="flex items-baseline gap-4">
+                <span class="font-serif text-xl tracking-[0.2em] text-bone/90 md:text-2xl">
+                    {t.hero.place}
+                </span>
+                <span class="text-xs tracking-[0.25em] text-bone/45">{t.hero.placeLocal}</span>
+            </div>
+
+            <a
+                href="#overview"
+                data-scroll-cue
+                class="group hidden shrink-0 items-center gap-3 text-[0.65rem] tracking-[0.3em] uppercase text-bone/60 transition-colors duration-500 hover:text-bone sm:flex"
+            >
+                {t.hero.scroll}
+                <span class="relative block h-10 w-px overflow-hidden bg-bone/25">
+                    <span class="scroll-tick absolute inset-x-0 top-0 block h-4 bg-brass"></span>
+                </span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* A slow travelling tick inside the rule, rather than a bouncing arrow.
+       Runs indefinitely but is one transform on a 1px element — effectively
+       free, and the reduced-motion block in global.css stops it outright. */
+    .scroll-tick {
+        animation: scroll-tick 2.6s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+    }
+
+    @keyframes scroll-tick {
+        0% {
+            transform: translateY(-100%);
+        }
+        60%,
+        100% {
+            transform: translateY(250%);
+        }
+    }
+</style>

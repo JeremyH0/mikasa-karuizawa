@@ -1,0 +1,84 @@
+---
+// schema.org JSON-LD.
+//
+// Modelled as a RealEstateListing whose subject is Land, because that is what
+// is actually for sale — there is no building. Marking it up as a Residence
+// would be wrong and risks a rich-result penalty for mismatched content.
+//
+// No price is published: the estate is offered privately, so `offers` is
+// deliberately omitted rather than filled with a placeholder.
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+    site: URL | undefined;
+    heroImage?: string;
+}
+
+const { locale, site, heroImage } = Astro.props;
+const t = useTranslations(locale);
+
+const abs = (path: string) => (site ? new URL(path, site).href : path);
+
+const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: t.meta.title,
+    description: t.meta.description,
+    inLanguage: locale,
+    ...(site ? { url: new URL(Astro.url.pathname, site).href } : {}),
+    ...(heroImage ? { image: abs(heroImage) } : {}),
+    datePosted: '2026-08-01',
+    about: {
+        '@type': 'Place',
+        name: 'Old Karuizawa — Mikasa',
+        address: {
+            '@type': 'PostalAddress',
+            addressCountry: 'JP',
+            addressRegion: 'Nagano',
+            addressLocality: 'Karuizawa',
+            streetAddress: 'Kyu-Karuizawa, Mikasa',
+        },
+        // Approximate centroid of the Mikasa district — precise enough to place
+        // the listing on a map, deliberately not the surveyed parcel corner.
+        geo: {
+            '@type': 'GeoCoordinates',
+            latitude: 36.3667,
+            longitude: 138.6,
+        },
+        additionalProperty: [
+            {
+                '@type': 'PropertyValue',
+                name: 'Site Area',
+                value: 2926.84,
+                unitCode: 'MTK', // UN/CEFACT code for square metre
+            },
+            {
+                '@type': 'PropertyValue',
+                name: 'Building Coverage Ratio',
+                value: '30%',
+            },
+            {
+                '@type': 'PropertyValue',
+                name: 'Floor Area Ratio',
+                value: '50%',
+            },
+            {
+                '@type': 'PropertyValue',
+                name: 'Zoning',
+                value: 'Category I Low-rise Exclusive Residential District',
+            },
+        ],
+    },
+    provider: {
+        '@type': 'Organization',
+        name: 'Hirafu Capital GK',
+        email: t.inquiry.email,
+        url: 'https://hirafucapital.com',
+    },
+};
+---
+
+{/* is:inline is explicit: this is data, not code, and must reach the document
+    exactly as serialised rather than being handed to the bundler. */}
+<script type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />

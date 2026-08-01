@@ -1,0 +1,83 @@
+---
+// Closing enquiry band.
+//
+// A mailto link, not a form. The estate is offered privately to a small
+// audience, and a form on a static host needs a PHP endpoint, spam handling
+// and a privacy notice to collect data it would only ever email onward. If a
+// form is wanted later, hc-property already has `public/inquiry.php` and its
+// no-JS fallback to copy from.
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const mailto = `mailto:${t.inquiry.email}?subject=${encodeURIComponent(t.inquiry.mailSubject)}`;
+---
+
+<section id="inquire" class="bg-bone py-24 md:py-32 lg:py-40">
+    <div class="mx-auto max-w-[1600px] px-6 md:px-10 lg:px-14">
+        <div class="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-24">
+            <div>
+                <p data-animate class="eyebrow">{t.inquiry.eyebrow}</p>
+
+                <h2 data-lines class="display mt-6 max-w-[14ch] text-[clamp(1.9rem,4vw,3.2rem)]">
+                    <span class="line-mask"><span>{t.inquiry.heading}</span></span>
+                </h2>
+
+                <div data-animate data-animate-delay="0.1" class="mt-10 h-px w-16 bg-brass" aria-hidden="true"></div>
+            </div>
+
+            <div class="flex flex-col justify-center">
+                <p data-animate class="max-w-[46ch] text-[0.95rem] leading-[1.85] text-ink/75">
+                    {t.inquiry.body}
+                </p>
+
+                <dl class="mt-12 space-y-6">
+                    <div data-animate data-animate-delay="0.1" class="border-t border-ink/12 pt-5">
+                        <dt class="text-[0.68rem] tracking-[0.28em] uppercase text-stone">
+                            {t.inquiry.companyLabel}
+                        </dt>
+                        <dd class="mt-2 font-serif text-xl tracking-[0.06em]">{t.inquiry.company}</dd>
+                    </div>
+
+                    <div data-animate data-animate-delay="0.16" class="border-t border-ink/12 pt-5">
+                        <dt class="text-[0.68rem] tracking-[0.28em] uppercase text-stone">
+                            {t.inquiry.emailLabel}
+                        </dt>
+                        <dd class="mt-2">
+                            <a
+                                href={mailto}
+                                class="font-serif text-xl tracking-[0.04em] underline-offset-[6px] transition-colors duration-300 hover:text-brass-dim hover:underline"
+                            >
+                                {t.inquiry.email}
+                            </a>
+                        </dd>
+                    </div>
+                </dl>
+
+                <a
+                    data-animate
+                    data-animate-delay="0.22"
+                    href={mailto}
+                    class="group mt-12 inline-flex w-fit items-center gap-4 border border-ink/25 px-9 py-4 text-[0.72rem] tracking-[0.26em] uppercase transition-colors duration-500 hover:bg-ink hover:text-bone"
+                >
+                    {t.inquiry.cta}
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="h-3.5 w-3.5 transition-transform duration-500 ease-[var(--ease-estate)] group-hover:translate-x-1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                        aria-hidden="true"
+                    >
+                        <path d="M4 12h15m-6-6 6 6-6 6" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

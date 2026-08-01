@@ -1,0 +1,53 @@
+---
+import { locales, localeHref, localeName, useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const year = new Date().getFullYear();
+const showLanguages = locales.length > 1;
+---
+
+<footer data-nav-dark class="bg-forest-deep px-6 py-16 md:px-10 lg:px-14">
+    <div class="mx-auto max-w-[1600px]">
+        <div class="flex flex-col gap-10 border-b border-bone/12 pb-10 md:flex-row md:items-end md:justify-between">
+            <div>
+                <p class="font-serif text-lg tracking-[0.26em] text-bone">OLD KARUIZAWA</p>
+                <p class="mt-2 text-[0.65rem] tracking-[0.4em] text-bone/45">MIKASA</p>
+            </div>
+
+            {showLanguages && (
+                <nav class="flex flex-wrap gap-x-7 gap-y-3" aria-label="Language">
+                    {locales.map((l) => (
+                        <a
+                            href={localeHref(l)}
+                            hreflang={l}
+                            lang={l}
+                            aria-current={l === locale ? 'true' : undefined}
+                            class:list={[
+                                'text-[0.72rem] tracking-[0.14em] transition-colors duration-300',
+                                l === locale ? 'text-brass' : 'text-bone/45 hover:text-bone',
+                            ]}
+                        >
+                            {localeName[l]}
+                        </a>
+                    ))}
+                </nav>
+            )}
+        </div>
+
+        <div class="mt-10 flex flex-col gap-8 md:flex-row md:justify-between">
+            <p class="max-w-[68ch] text-[0.68rem] leading-relaxed text-bone/35">
+                {t.footer.disclaimer}
+            </p>
+
+            <p class="shrink-0 text-[0.68rem] tracking-[0.1em] text-bone/45">
+                © {year} {t.footer.company}. {t.footer.rights}
+            </p>
+        </div>
+    </div>
+</footer>

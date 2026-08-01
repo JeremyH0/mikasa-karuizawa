@@ -1,0 +1,102 @@
+---
+// Page 1 right-hand panel: the "Old Karuizawa" copy block and its four
+// icon features, paired here with the tree-lined lane plate from page 2.
+import Figure from './Figure.astro';
+import FeatureIcon from './FeatureIcon.astro';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+// The four marks from the deck — pin, globe, forest, compass rose. Geometry
+// lives in FeatureIcon.astro; see the style rules at the top of that file
+// before drawing a fifth.
+const features = [
+    { key: 'district', label: t.overview.features.district },
+    { key: 'privacy', label: t.overview.features.privacy },
+    { key: 'greenery', label: t.overview.features.greenery },
+    { key: 'ginza', label: t.overview.features.ginza },
+] as const;
+---
+
+{/* Forest green, continuing the hero's darkness rather than cutting straight
+    to bone — the eye stays in the woodland for one more section before the
+    page opens up at Location. Marked dark full-width: the left half is the
+    (dark) lane photograph and the right half is this panel, so the header
+    flips its whole bar here, not just the wordmark. */}
+<section id="overview" data-nav-dark class="relative bg-forest">
+    <div class="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
+        {/* Left: the approach lane.
+
+            Inset from the top rather than run full-bleed, so a band of forest
+            green always sits beneath the header. That is deliberate and
+            load-bearing: this is a gold section, and gold over this plate
+            measures 1.0:1 — the canopy has bright sky gaps in exactly the
+            band the bar occupies. Pulling gold up to AA over it would need a
+            72% black scrim, which would kill the photograph.
+
+            Letting the green run behind the header instead costs nothing and
+            reads as intentional — the image sits within the green field
+            rather than colliding with the section edge. Keep the inset at
+            least as tall as the header (~72px) if these values are retuned. */}
+        <div class="relative overflow-hidden pt-20 lg:min-h-[46rem] lg:pt-0">
+            <Figure
+                src="/images/approach-lane.jpg"
+                alt={t.overview.imageAlt}
+                width={1200}
+                height={1600}
+                tone="forest"
+                class="h-full w-full lg:absolute lg:inset-x-0 lg:bottom-0 lg:top-28"
+                imgClass="h-full w-full object-cover"
+                data-parallax-img
+                data-parallax-depth="10"
+            />
+        </div>
+
+        {/* Right: copy. */}
+        <div class="flex flex-col justify-center px-6 py-20 md:px-14 md:py-28 lg:px-20 lg:py-32 xl:px-28">
+            <p data-animate class="eyebrow text-brass">{t.overview.eyebrow}</p>
+
+            <h2
+                data-lines
+                class="display mt-6 max-w-[18ch] text-bone text-[clamp(1.75rem,3.4vw,2.9rem)]"
+            >
+                <span class="line-mask"><span>{t.overview.heading}</span></span>
+            </h2>
+
+            <div
+                data-animate
+                data-animate-delay="0.1"
+                class="mt-10 h-px w-16 bg-brass"
+                aria-hidden="true"
+            >
+            </div>
+
+            <div class="mt-10 max-w-[46ch] space-y-6 text-[0.95rem] leading-[1.85] text-bone/70">
+                <p data-animate data-animate-delay="0.15">{t.overview.body1}</p>
+                <p data-animate data-animate-delay="0.22">{t.overview.body2}</p>
+            </div>
+
+            <ul class="mt-14 space-y-7">
+                {features.map((feature, i) => (
+                    <li
+                        data-animate
+                        data-animate-delay={String(0.3 + i * 0.07)}
+                        class="flex items-start gap-5"
+                    >
+                        <span class="mt-0.5 shrink-0 text-brass">
+                            <FeatureIcon name={feature.key} class="h-9 w-9" />
+                        </span>
+                        <span class="pt-1.5 text-[0.9rem] leading-relaxed text-bone/80">
+                            {feature.label}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    </div>
+</section>

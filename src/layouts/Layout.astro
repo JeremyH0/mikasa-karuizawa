@@ -1,0 +1,155 @@
+---
+import '../styles/global.css';
+import StructuredData from '../components/StructuredData.astro';
+import { locales, defaultLocale, localeHref, cjkFonts, useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale?: Locale;
+    title?: string;
+    description?: string;
+    ogImage?: string;
+    /** Intrinsic size of ogImage. Scrapers that lack it may skip the preview. */
+    ogImageSize?: { width: number; height: number };
+    ogImageAlt?: string;
+}
+
+const { locale = defaultLocale, ogImage, ogImageSize, ogImageAlt } = Astro.props;
+const t = useTranslations(locale);
+
+// Fall back to the locale's own metadata rather than an English default.
+const title = Astro.props.title ?? t.meta.title;
+const description = Astro.props.description ?? t.meta.description;
+
+const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+const ogImageURL = ogImage && Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
+
+// hreflang alternates: tell search engines these pages are the same document
+// in different languages, so each market gets served its own.
+//
+// Suppressed entirely on a single-locale build. A lone self-referential
+// hreflang plus an x-default that points at the same URL is not wrong, but it
+// is pure noise — hreflang only means anything when there is another language
+// to point at.
+const multilingual = locales.length > 1;
+
+const alternates =
+    multilingual && Astro.site
+        ? locales.map((l) => ({ hreflang: l, href: new URL(localeHref(l), Astro.site).href }))
+        : [];
+const xDefaultHref =
+    multilingual && Astro.site ? new URL(localeHref(defaultLocale), Astro.site).href : undefined;
+
+// The Latin faces are self-hosted (see styles/fonts.css) and CJK comes from
+// the reader's own system fonts, so this page makes NO third-party font
+// request. `cjk` is only the flag that switches the CSS font stacks.
+const cjk = cjkFonts[locale];
+
+// OG locale wants underscores, not hyphens (ja_JP, zh_CN style).
+const ogLocaleMap: Record<Locale, string> = {
+    en: 'en_US',
+    ja: 'ja_JP',
+    'zh-Hans': 'zh_CN',
+    'zh-Hant': 'zh_TW',
+};
+const ogLocale = ogLocaleMap[locale];
+const ogAlternateLocales = locales.filter((l) => l !== locale).map((l) => ogLocaleMap[l]);
+---
+
+<!doctype html>
+<html lang={locale} data-cjk={cjk ? locale : undefined}>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content={description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="theme-color" content="#F2F1EC" />
+        {/* Astro.generator is deliberately omitted — it publishes the exact
+            framework version for anyone probing for known CVEs. */}
+
+        <title>{title}</title>
+
+        {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+        {alternates.map((alt) => (
+            <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+        ))}
+        {xDefaultHref && <link rel="alternate" hreflang="x-default" href={xDefaultHref} />}
+
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Old Karuizawa — Mikasa" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:locale" content={ogLocale} />
+        {multilingual &&
+            ogAlternateLocales.map((l) => <meta property="og:locale:alternate" content={l} />)}
+        {canonicalURL && <meta property="og:url" content={canonicalURL} />}
+        {ogImageURL && <meta property="og:image" content={ogImageURL} />}
+        {ogImageURL && ogImageSize && <meta property="og:image:width" content={String(ogImageSize.width)} />}
+        {ogImageURL && ogImageSize && <meta property="og:image:height" content={String(ogImageSize.height)} />}
+        {ogImageURL && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+        <meta name="twitter:card" content={ogImageURL ? 'summary_large_image' : 'summary'} />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        {ogImageURL && <meta name="twitter:image" content={ogImageURL} />}
+        {ogImageURL && ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
+
+        <StructuredData locale={locale} site={Astro.site} heroImage={ogImage} />
+
+        {/*
+            Arm the motion system BEFORE first paint.
+
+            global.css hides animated elements only under `html.motion-ready`,
+            so the hidden start states never exist unless this inline script
+            runs. That ordering means a browser with JS disabled — or one where
+            the module below 404s — paints fully visible content instead of a
+            blank page, with no flash either way.
+
+            The failsafe covers the third case: JS is on, the class landed, but
+            motion.ts never booted (chunk failed, parse error, ancient engine).
+            motion.ts sets `motion-active` when it takes over; if that has not
+            happened within 2.5s we assume it never will and unhide everything.
+        */}
+        <script is:inline>
+            (function () {
+                var root = document.documentElement;
+                root.classList.add('motion-ready');
+                setTimeout(function () {
+                    if (!root.classList.contains('motion-active')) {
+                        root.classList.remove('motion-ready');
+                    }
+                }, 2500);
+            })();
+        </script>
+
+        <noscript>
+            <style>
+                /* Belt and braces: the inline script above already guards this,
+                   but if scripting is blocked after parse we still win. */
+                html [data-animate],
+                html [data-hero],
+                html [data-parallax-img] {
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
+                html .line-mask > span { transform: none !important; }
+                html [data-reveal-img] { clip-path: none !important; }
+                html [data-draw] { stroke-dashoffset: 0 !important; }
+                [data-lang-prompt] { display: none !important; }
+            </style>
+        </noscript>
+    </head>
+
+    <body class="bg-bone text-ink font-sans antialiased">
+        <a
+            href="#main"
+            class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-forest focus:px-5 focus:py-3 focus:text-sm focus:text-bone"
+        >
+            Skip to content
+        </a>
+
+        <slot />
+
+        <script>
+            import '../scripts/motion';
+        </script>
+    </body>
+</html>

@@ -1,0 +1,125 @@
+---
+// Page 3: the dark spec panel on the left, the site plan on the right.
+import SitePlan from './SitePlan.astro';
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const rows = [
+    t.land.rows.location,
+    t.land.rows.area,
+    t.land.rows.use,
+    t.land.rows.zoning,
+    t.land.rows.coverage,
+    t.land.rows.far,
+];
+
+// The counter animates to this; the printed value stays in the table above it.
+// Parsed from the dictionary string so the two can never disagree.
+const areaNumber = t.land.counter.value.replace(/,/g, '');
+---
+
+<section id="land" class="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1fr)]">
+    {/* Left: dark information panel */}
+    {/* "left" because on desktop this panel is only the left column — the
+        header must flip its wordmark but keep its links dark. */}
+    <div data-nav-dark="left" class="bg-forest px-6 py-20 md:px-14 md:py-28 lg:px-16 lg:py-32 xl:px-24">
+        <div class="mx-auto flex h-full max-w-xl flex-col justify-center lg:mx-0">
+            <div data-animate class="mb-8 h-px w-14 bg-brass" aria-hidden="true"></div>
+
+            <p data-animate class="eyebrow text-brass">{t.land.eyebrow}</p>
+
+            <h2 data-lines class="display mt-6 text-bone text-[clamp(1.6rem,2.9vw,2.5rem)]">
+                <span class="line-mask"><span>{t.land.headingLine1}</span></span>
+                <span class="line-mask"><span>{t.land.headingLine2}</span></span>
+            </h2>
+
+            <p
+                data-animate
+                data-animate-delay="0.2"
+                class="mt-14 text-[0.7rem] font-medium tracking-[0.3em] uppercase text-bone/50"
+            >
+                {t.land.tableHeading}
+            </p>
+
+            <dl class="mt-6 border-t border-bone/15">
+                {rows.map((row, i) => (
+                    <div
+                        data-animate
+                        data-animate-delay={String(0.25 + i * 0.06)}
+                        class="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-5 border-b border-bone/15 py-5"
+                    >
+                        <dt class="text-[0.78rem] leading-relaxed tracking-[0.06em] text-bone/50">
+                            {row.label}
+                        </dt>
+                        <dd class="text-[0.9rem] leading-relaxed text-bone/95">{row.value}</dd>
+                    </div>
+                ))}
+            </dl>
+        </div>
+    </div>
+
+    {/* Right: the plan */}
+    <div class="flex flex-col justify-center bg-bone px-6 py-20 md:px-14 md:py-24 lg:px-16 xl:px-20">
+        <div class="mx-auto w-full max-w-2xl">
+            {/*
+                The real survey drawing, layered OVER the vector reconstruction.
+
+                The vector version (SitePlan.astro) is a faithful sketch fitted
+                to the surveyed figures, and it is ~0.8% off on area because the
+                deck gives edge lengths and an area but no bearings. The actual
+                survey drawing has no such caveat, so when it is present it
+                wins — it carries the true bearings, the boundary markers, the
+                adjoining parcel references and the setting-out points.
+
+                Until that file is dropped in, the vector shows through and the
+                section is complete rather than empty. `object-contain` plus a
+                bone ground keeps the two from ever peeking past each other,
+                since their aspect ratios differ slightly.
+
+                If the survey scan becomes permanent, SitePlan.astro can be
+                deleted outright — nothing else imports it.
+            */}
+            <div class="relative">
+                <SitePlan locale={locale} />
+                <img
+                    src="/images/site-survey.png"
+                    alt={t.land.plan.caption}
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full bg-bone object-contain"
+                    data-figure-img
+                />
+            </div>
+
+            <div class="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-ink/12 pt-8">
+                <div data-animate>
+                    <p class="font-serif text-[clamp(2rem,4vw,3rem)] leading-none tracking-[0.03em]">
+                        {/* Starts at the final value so a no-JS or failed-boot
+                            render still shows the real figure, never "0". */}
+                        <span data-count={areaNumber}>{t.land.counter.value}</span>
+                        <span class="ml-2 text-[0.4em] tracking-[0.14em] text-stone">
+                            {t.land.counter.unit}
+                        </span>
+                    </p>
+                    <p class="mt-2 text-[0.75rem] tracking-[0.22em] text-stone">
+                        {t.land.counter.sub}
+                    </p>
+                </div>
+
+                <p data-animate data-animate-delay="0.1" class="text-[0.7rem] tracking-[0.16em] text-stone">
+                    {t.land.plan.caption}
+                </p>
+            </div>
+
+            <p data-animate data-animate-delay="0.15" class="mt-6 max-w-[62ch] text-[0.7rem] leading-relaxed text-stone">
+                {t.land.plan.disclaimer}
+            </p>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#3a4133"/>
+  <!-- Three conifers, echoing the greenery mark in the deck. -->
+  <g fill="none" stroke="#b9a57c" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 6.5 12.2 15h2.1l-3 6.6h7.4l-3-6.6h2.1z"/>
+    <path d="M16 21.6v3.9"/>
+    <path d="M8.6 12.5 5.9 18.6h1.6l-2.2 4.8h5.4"/>
+    <path d="M23.4 12.5l2.7 6.1h-1.6l2.2 4.8h-5.4"/>
+  </g>
+</svg>

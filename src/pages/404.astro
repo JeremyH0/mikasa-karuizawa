@@ -1,0 +1,45 @@
+---
+// Referenced by ErrorDocument in public/.htaccess.
+//
+// Always English: Apache serves this for any unmatched path, including ones
+// that never belonged to a locale, so there is no reliable way to know which
+// language the visitor wanted. The links out cover the rest.
+import Layout from '../layouts/Layout.astro';
+import { locales, localeHref, localeName } from '../i18n';
+
+const showLanguages = locales.length > 1;
+---
+
+<Layout title="Page not found | Old Karuizawa — Mikasa" description="The page you requested could not be found.">
+    <main class="flex min-h-[100svh] flex-col items-center justify-center bg-forest-deep px-6 text-center">
+        <p class="eyebrow text-brass">404</p>
+
+        <h1 class="display mt-8 max-w-[20ch] text-bone text-[clamp(1.6rem,4vw,2.75rem)]">
+            This page could not be found.
+        </h1>
+
+        <div class="mt-10 h-px w-16 bg-brass" aria-hidden="true"></div>
+
+        <a
+            href="/"
+            class="mt-12 border border-bone/30 px-9 py-4 text-[0.72rem] tracking-[0.26em] uppercase text-bone transition-colors duration-500 hover:bg-bone hover:text-ink"
+        >
+            Return to the estate
+        </a>
+
+        {showLanguages && (
+            <nav class="mt-14 flex flex-wrap justify-center gap-x-7 gap-y-3" aria-label="Language">
+                {locales.map((l) => (
+                    <a
+                        href={localeHref(l)}
+                        hreflang={l}
+                        lang={l}
+                        class="text-[0.72rem] tracking-[0.14em] text-bone/45 transition-colors hover:text-bone"
+                    >
+                        {localeName[l]}
+                    </a>
+                ))}
+            </nav>
+        )}
+    </main>
+</Layout>

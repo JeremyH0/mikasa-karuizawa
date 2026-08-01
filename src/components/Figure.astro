@@ -1,0 +1,97 @@
+---
+// Image slot that is safe to ship before the photography exists.
+//
+// Files are referenced from /public by URL rather than imported through
+// astro:assets. That is a deliberate trade: astro:assets would give us format
+// conversion and hashed filenames, but a static import of a file that is not
+// on disk is a BUILD ERROR — so the site could not build at all until every
+// photograph had been delivered. Referencing by path means a missing file is
+// a runtime no-op instead, and dropping the real export into public/images/
+// under the documented name makes it appear with no code change.
+//
+// Until then each slot renders as a soft woodland-toned gradient at the exact
+// final aspect ratio, so layout, rhythm and scroll distances are already
+// correct and nothing shifts when the real images arrive.
+//
+// Swap this component for astro:assets <Image> once the shoot is delivered if
+// you want automatic AVIF/WebP — the call sites will not need to change shape.
+
+interface Props {
+    /** Path under /public, e.g. "/images/hero-forest.jpg". */
+    src: string;
+    alt: string;
+    /** Intrinsic size — required, and used to reserve space against CLS. */
+    width: number;
+    height: number;
+    /** Above-the-fold images should be eager; everything else lazy. */
+    loading?: 'eager' | 'lazy';
+    fetchpriority?: 'high' | 'low' | 'auto';
+    class?: string;
+    /** Applied to the <img> itself, e.g. for parallax or reveal hooks. */
+    imgClass?: string;
+    /** Tone of the placeholder gradient. */
+    tone?: 'forest' | 'stone' | 'interior';
+}
+
+const {
+    src,
+    alt,
+    width,
+    height,
+    loading = 'lazy',
+    fetchpriority = 'auto',
+    class: className = '',
+    imgClass = '',
+    tone = 'forest',
+    ...rest
+} = Astro.props;
+
+const tones: Record<string, string> = {
+    forest: 'linear-gradient(155deg, #5d6b4e 0%, #3a4133 55%, #2a2f25 100%)',
+    stone: 'linear-gradient(155deg, #cfcabb 0%, #a9a494 60%, #8a897e 100%)',
+    interior: 'linear-gradient(155deg, #b3a893 0%, #8d8672 50%, #5c584c 100%)',
+};
+
+// Guard against a typo'd tone silently producing `undefined` as a CSS value.
+const background = tones[tone] ?? tones.forest;
+
+// `fetchpriority` is valid HTML but missing from Astro's ImgHTMLAttributes,
+// so it is spread in rather than written as a literal attribute.
+const priorityAttr = { fetchpriority };
+---
+
+<figure
+    class:list={['relative overflow-hidden', className]}
+    style={`background-image:${background}; aspect-ratio:${width} / ${height};`}
+    {...rest}
+>
+    <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={loading}
+        decoding="async"
+        {...priorityAttr}
+        class:list={['h-full w-full object-cover', imgClass]}
+        data-figure-img
+    />
+</figure>
+
+<script>
+    // A missing file would otherwise paint the browser's broken-image glyph on
+    // top of the placeholder gradient. Hide the element instead, so an
+    // undelivered slot reads as an intentional tonal panel.
+    //
+    // Bound during capture because `error` does not bubble from <img>.
+    document.addEventListener(
+        'error',
+        (event) => {
+            const target = event.target as HTMLElement | null;
+            if (target instanceof HTMLImageElement && target.dataset.figureImg !== undefined) {
+                target.style.visibility = 'hidden';
+            }
+        },
+        true
+    );
+</script>

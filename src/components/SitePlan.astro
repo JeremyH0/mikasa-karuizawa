@@ -1,0 +1,276 @@
+---
+// Parcel 1369-11, rebuilt as vector.
+//
+// WHY VECTOR RATHER THAN THE DECK'S IMAGE
+// The survey drawing on page 3 is line art, so a raster crop of it goes soft
+// on a retina screen exactly where a buyer wants to zoom. Rebuilt as SVG it
+// stays sharp at any scale, the boundary can draw itself on scroll, and every
+// label stays real text — which means the dimensions are selectable, the
+// parcel numbers are searchable, and the four locales translate "Road" and
+// "N" without anyone re-exporting artwork.
+//
+// GEOMETRY — READ BEFORE EDITING
+// The viewBox is in METRES: 1 user unit = 1 m, so the scale bar and the
+// dimension labels are guaranteed to agree with the shape.
+//
+// Corner coordinates are reconstructed from the surveyed edge lengths in the
+// deck (56.64 / 54.08 / 29.00 / 26.84, plus the four western segments) fitted
+// to the stated area of 2,926.84 m². That fit is approximate: the drawn
+// polygon encloses ~2,950 m², about 0.8% over, because the deck gives edge
+// lengths and an area but no bearings, and no single polygon satisfies all of
+// them exactly. The western frontage in particular is drawn as a gentle curve
+// because it follows the road.
+//
+// So: TRUE TO THE SURVEYED FIGURES, INDICATIVE AS TO SHAPE. The labels below
+// are the real dimensions and are what a buyer should rely on; the outline is
+// a faithful sketch, not a substitute for the registered plan. That caveat is
+// stated to the reader too — see `t.land.plan.disclaimer`.
+//
+// If the real survey CAD or a high-res scan arrives, replace `boundary` with
+// its true coordinates and delete this note.
+import { useTranslations, type Locale } from '../i18n';
+
+interface Props {
+    locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+// Clockwise from the north-west corner. Metres.
+const boundary = [
+    { x: 0.5, y: 3.5 },   // NW  (marker 3)
+    { x: 56.8, y: 0.0 },  // NE  (marker 2)
+    { x: 55.5, y: 51.0 }, // SE  (marker 5)
+    { x: 26.9, y: 52.2 }, // S   (marker 21)
+    { x: 0.1, y: 52.6 },  // SW  (marker 4)
+    { x: -3.2, y: 50.0 }, // W frontage
+    { x: -4.4, y: 35.0 }, // W frontage (marker 15)
+    { x: -3.0, y: 22.0 }, // W frontage (marker 31)
+];
+
+const outline = boundary.map((p) => `${p.x},${p.y}`).join(' L ');
+const path = `M ${outline} Z`;
+
+// Edge dimensions, placed at each edge midpoint and nudged clear of the line.
+const dims = [
+    { text: '56.64', x: 28.6, y: -2.2, rotate: -3.6 },
+    { text: '54.08', x: 59.4, y: 25.5, rotate: 90 },
+    { text: '29.00', x: 41.2, y: 55.0, rotate: 2.4 },
+    { text: '26.84', x: 13.5, y: 55.8, rotate: 0.9 },
+    { text: '10.61', x: -3.9, y: 54.4, rotate: -38 },
+    { text: '16.59', x: -7.6, y: 42.5, rotate: -85 },
+    { text: '13.55', x: -7.5, y: 28.5, rotate: -84 },
+    { text: '21.14', x: -4.6, y: 12.5, rotate: -80 },
+];
+
+// Adjoining parcels, as labelled on the survey.
+const neighbours = [
+    { text: '1369-13', x: 28, y: -6.4 },
+    { text: '1369-7', x: 63.5, y: 12 },
+    { text: '1369-10', x: 44, y: 59.5 },
+    { text: '1369-15', x: 12, y: 59.5 },
+];
+---
+
+<figure class="relative">
+    <svg
+        viewBox="-18 -12 86 82"
+        class="w-full"
+        role="img"
+        aria-label={`${t.land.plan.caption} — ${t.land.rows.area.value}`}
+    >
+        <defs>
+            <linearGradient id="parcel-fill" x1="0" y1="0" x2="0.4" y2="1">
+                <stop offset="0%" stop-color="#8f9a7c" stop-opacity="0.34" />
+                <stop offset="100%" stop-color="#5f6b4d" stop-opacity="0.20" />
+            </linearGradient>
+
+            {/* Soft woodland stipple along the road frontage. */}
+            <pattern id="woodland" width="4" height="4" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.15" fill="#7d8a68" fill-opacity="0.5" />
+            </pattern>
+        </defs>
+
+        {/* --- Road ------------------------------------------------------- */}
+        <path
+            d="M -1,-12 C -4,0 -8.6,12 -9.4,22 C -10.4,32 -10.6,42 -8.8,50 C -7.6,56 -6,61 -4.4,70"
+            fill="none"
+            stroke="#ded8c8"
+            stroke-width="5.2"
+            stroke-linecap="round"
+            data-animate
+            data-animate-delay="0.05"
+        />
+        <path
+            d="M -1,-12 C -4,0 -8.6,12 -9.4,22 C -10.4,32 -10.6,42 -8.8,50 C -7.6,56 -6,61 -4.4,70"
+            fill="none"
+            stroke="#c3bda9"
+            stroke-width="0.22"
+            stroke-dasharray="1.6 1.6"
+            data-animate
+            data-animate-delay="0.05"
+        />
+
+        {/* --- Woodland edging -------------------------------------------- */}
+        <path
+            d="M -18,-12 L -13,-12 C -15,6 -16,30 -14,70 L -18,70 Z"
+            fill="url(#woodland)"
+            data-animate
+        />
+        <path
+            d="M 62,-12 L 68,-12 L 68,70 L 62,70 C 64,44 64,16 62,-12 Z"
+            fill="url(#woodland)"
+            data-animate
+        />
+
+        {/* --- Parcel ----------------------------------------------------- */}
+        {/* Fill and stroke are separate elements so the fill can fade while
+            the stroke draws — one path cannot do both independently. */}
+        <path d={path} fill="url(#parcel-fill)" data-animate data-animate-delay="0.5" />
+        <path
+            d={path}
+            fill="none"
+            stroke="#3a4133"
+            stroke-width="0.42"
+            stroke-linejoin="round"
+            pathLength="1"
+            data-draw
+        />
+
+        {/* Corner markers */}
+        {boundary.map((p, i) => (
+            <circle
+                cx={p.x}
+                cy={p.y}
+                r="0.75"
+                fill="#f2f1ec"
+                stroke="#3a4133"
+                stroke-width="0.34"
+                data-animate
+                data-animate-delay={String(0.9 + i * 0.05)}
+            />
+        ))}
+
+        {/* --- Labels ------------------------------------------------------ */}
+        <text
+            x="28"
+            y="24"
+            text-anchor="middle"
+            class="plan-parcel"
+            data-animate
+            data-animate-delay="1.1"
+        >
+            {t.land.plan.parcel}
+        </text>
+
+        <text
+            x="28"
+            y="30.5"
+            text-anchor="middle"
+            class="plan-area"
+            data-animate
+            data-animate-delay="1.2"
+        >
+            {t.land.rows.area.value}
+        </text>
+
+        {dims.map((d, i) => (
+            <text
+                x={d.x}
+                y={d.y}
+                text-anchor="middle"
+                transform={`rotate(${d.rotate} ${d.x} ${d.y})`}
+                class="plan-dim"
+                data-animate
+                data-animate-delay={String(1.15 + i * 0.04)}
+            >
+                {d.text}
+            </text>
+        ))}
+
+        {neighbours.map((n) => (
+            <text x={n.x} y={n.y} text-anchor="middle" class="plan-neighbour" data-animate data-animate-delay="1.4">
+                {n.text}
+            </text>
+        ))}
+
+        {/* Road label, set along the frontage. */}
+        <text
+            x="-13.2"
+            y="34"
+            text-anchor="middle"
+            transform="rotate(-88 -13.2 34)"
+            class="plan-road"
+            data-animate
+            data-animate-delay="1.4"
+        >
+            {t.land.plan.road}
+        </text>
+
+        {/* --- North arrow -------------------------------------------------- */}
+        <g data-animate data-animate-delay="1.5" transform="translate(63.5, -6)">
+            <path d="M0,-4.6 L1.9,3.2 L0,1.5 L-1.9,3.2 Z" fill="#3a4133" />
+            <text x="0" y="7.6" text-anchor="middle" class="plan-north">{t.land.plan.north}</text>
+        </g>
+
+        {/* --- Scale bar ---------------------------------------------------- */}
+        {/* Drawn in metres like everything else, so it is self-verifying: the
+            bar is literally 30 units long in a viewBox measured in metres. */}
+        <g data-animate data-animate-delay="1.55" transform="translate(-14, 66)">
+            <rect x="0" y="0" width="10" height="0.9" fill="#3a4133" />
+            <rect x="10" y="0" width="10" height="0.9" fill="#f2f1ec" stroke="#3a4133" stroke-width="0.18" />
+            <rect x="20" y="0" width="10" height="0.9" fill="#3a4133" />
+            <text x="0" y="-1.4" text-anchor="middle" class="plan-scale">0</text>
+            <text x="10" y="-1.4" text-anchor="middle" class="plan-scale">10</text>
+            <text x="20" y="-1.4" text-anchor="middle" class="plan-scale">20</text>
+            <text x="30" y="-1.4" text-anchor="middle" class="plan-scale">30</text>
+            <text x="34.5" y="-1.4" text-anchor="start" class="plan-scale">{t.land.plan.scaleLabel}</text>
+        </g>
+    </svg>
+</figure>
+
+<style>
+    /* Font sizes are in metres too — 2 units tall against a ~55 m parcel. */
+    svg text {
+        font-family: var(--font-sans);
+        fill: #3a4133;
+    }
+
+    .plan-parcel {
+        font-family: var(--font-serif);
+        font-size: 4.6px;
+        letter-spacing: 0.16px;
+    }
+
+    .plan-area {
+        font-size: 2.05px;
+        letter-spacing: 0.1px;
+        fill: #5c6350;
+    }
+
+    .plan-dim {
+        font-size: 2.15px;
+        letter-spacing: 0.05px;
+        fill: #4a5140;
+    }
+
+    .plan-neighbour {
+        font-size: 2.2px;
+        letter-spacing: 0.08px;
+        fill: #8a897e;
+    }
+
+    .plan-road,
+    .plan-north,
+    .plan-scale {
+        font-size: 2.1px;
+        letter-spacing: 0.18px;
+        fill: #8a897e;
+    }
+
+    .plan-north {
+        font-size: 2.6px;
+        fill: #3a4133;
+    }
+</style>

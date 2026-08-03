@@ -73,7 +73,11 @@ const schema = {
     provider: {
         '@type': 'Organization',
         name: 'Hirafu Capital GK',
-        email: t.inquiry.email,
+        // ⚠ PLACEHOLDER — the real enquiry mailbox is not decided yet. Keep
+        // this in sync with public/inquiry.php and inquiry-config.sample.php;
+        // the dictionaries no longer carry a display email since the contact
+        // method became a form (t.inquire), not a mailto link.
+        email: 'info@mikasa-karuizawa.com',
         url: 'https://hirafucapital.com',
     },
 };

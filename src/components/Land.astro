@@ -29,7 +29,12 @@ const areaNumber = t.land.counter.value.replace(/,/g, '');
     {/* "left" because on desktop this panel is only the left column — the
         header must flip its wordmark but keep its links dark. */}
     <div data-nav-dark="left" class="bg-forest px-6 py-20 md:px-14 md:py-28 lg:px-16 lg:py-32 xl:px-24">
-        <div class="mx-auto flex h-full max-w-xl flex-col justify-center lg:mx-0">
+        {/* max-w-xl is the right measure once this is a column beside the
+            plan, but on a tablet — where it is the full width of the page —
+            it left ~150px of empty green either side and made the spec table
+            read like a phone layout that had been stretched. Widened between
+            md and lg only. */}
+        <div class="mx-auto flex h-full max-w-xl flex-col justify-center md:max-w-2xl lg:mx-0 lg:max-w-xl">
             <div data-animate class="mb-8 h-px w-14 bg-brass" aria-hidden="true"></div>
 
             <p data-animate class="eyebrow text-brass">{t.land.eyebrow}</p>
@@ -65,7 +70,13 @@ const areaNumber = t.land.counter.value.replace(/,/g, '');
     </div>
 
     {/* Right: the plan */}
-    <div class="flex flex-col justify-center bg-bone px-6 py-20 md:px-14 md:py-24 lg:px-16 xl:px-20">
+    {/* Surfaced in the survey's own paper tone rather than bone, so the
+        drawing's edges dissolve instead of ruling a visible rectangle across
+        the panel. See --color-paper in global.css for the measurement. The
+        step from here to the bone sections above and below is 1/3/5 per
+        channel — well under what the eye resolves across a flat field, so it
+        costs nothing to move the difference to where no hard edge sits. */}
+    <div class="flex flex-col justify-center bg-paper px-6 py-20 md:px-14 md:py-24 lg:px-16 xl:px-20">
         <div class="mx-auto w-full max-w-2xl">
             {/*
                 The real survey drawing, layered OVER the vector reconstruction.
@@ -92,10 +103,34 @@ const areaNumber = t.land.counter.value.replace(/,/g, '');
                     alt={t.land.plan.caption}
                     loading="lazy"
                     decoding="async"
-                    class="absolute inset-0 h-full w-full bg-bone object-contain"
+                    class="absolute inset-0 h-full w-full bg-paper object-contain"
                     data-figure-img
                 />
             </div>
+
+            {/* A surveyor's drawing carries its value in the dimension figures
+                along each boundary, and at a phone's width those are a few
+                pixels tall — the plate is decoration there, not information.
+                Scaling the drawing up is not the fix; the section would run
+                for screens and the figures would still be small.
+
+                So the small-screen path is to hand the reader the real file.
+                A plain link to the full-resolution scan opens in the browser's
+                own image viewer, which already does pinch-zoom and pan far
+                better than anything worth building here, and it costs no
+                JavaScript. Hidden at lg, where the drawing is large enough to
+                read in place. */}
+            <a
+                href="/images/site-survey.png"
+                target="_blank"
+                rel="noopener"
+                class="mt-5 inline-flex items-center gap-2.5 border-b border-ink/25 pb-1 text-[0.7rem] tracking-[0.2em] uppercase text-ink/70 transition-colors hover:border-brass-dim hover:text-brass-dim lg:hidden"
+            >
+                {t.land.plan.enlarge}
+                <svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                    <path d="M15 3h6v6M21 3l-8 8M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
+                </svg>
+            </a>
 
             <div class="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-ink/12 pt-8">
                 <div data-animate>

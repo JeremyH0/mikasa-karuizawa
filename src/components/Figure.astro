@@ -55,13 +55,30 @@ const tones: Record<string, string> = {
 // Guard against a typo'd tone silently producing `undefined` as a CSS value.
 const background = tones[tone] ?? tones.forest;
 
+// This element is `relative` by default so the caller can stack things over it,
+// but a caller that positions the figure itself must win.
+//
+// Tailwind emits the position utilities in a fixed order — static, fixed,
+// absolute, relative, sticky — so a hardcoded `relative` here silently BEATS an
+// `absolute` passed in by the caller, no matter which order the classes appear
+// in the attribute. That is not a style nit: it took the hero headline off the
+// page entirely. Hero.astro positions this figure `absolute inset-0` so the
+// headline can sit over it; with `relative` winning, the image dropped into
+// normal flow, pushed the headline a full viewport down, and the section's
+// `overflow-hidden` clipped it away on every breakpoint.
+//
+// Only an UNPREFIXED position utility counts. A variant like `lg:absolute`
+// (Overview.astro) lives in a media query and already outranks the base
+// `relative` at that width, so the default must stay for the widths below it.
+const positionsSelf = /(^|\s)(absolute|fixed|sticky|static)(\s|$)/.test(className);
+
 // `fetchpriority` is valid HTML but missing from Astro's ImgHTMLAttributes,
 // so it is spread in rather than written as a literal attribute.
 const priorityAttr = { fetchpriority };
 ---
 
 <figure
-    class:list={['relative overflow-hidden', className]}
+    class:list={[positionsSelf ? 'overflow-hidden' : 'relative overflow-hidden', className]}
     style={`background-image:${background}; aspect-ratio:${width} / ${height};`}
     {...rest}
 >

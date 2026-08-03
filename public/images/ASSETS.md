@@ -13,7 +13,7 @@ Nothing shifts when the photography lands.
 
 | Filename | Ratio | Minimum width | Where it appears |
 |---|---|---|---|
-| `hero-forest.jpg` | 16:9 | **2560 px** | Full-screen hero + social preview |
+| `hero-forest.jpg` | ~3:2 | **2560 px** | Full-screen hero + social preview |
 | `approach-lane.jpg` | 3:4 | **1400 px** | Overview, left column |
 | `location-map.png` | 3:2 | **2400 px** | Location section |
 | `site-survey.png` | ~1:1 | **2000 px** | Land section |
@@ -37,6 +37,14 @@ a lot will lose the edges of the composition.
 ### `hero-forest.jpg` — the one that matters most
 Doubles as the `og:image`, so it is what appears when the link is pasted into
 WhatsApp, LINE, WeChat or Slack.
+
+Built from `src/assets/images/mikasa-hero-upscaled.png` (2714 px), **not** from
+the deck's own `mikasa-photo-01.png` — that export is only 1357 px, under half
+the width this slot needs, and `withoutEnlargement` in the optimiser correctly
+refused to invent the missing pixels. Output is 2560×1700 at ~545 KB. If a true
+high-resolution original is ever delivered, point the hero job in
+`scripts/optimize-images.mjs` at it and re-run `npm run images`; the declared
+`height` in `Hero.astro` must match the new intrinsic ratio.
 
 Keep the ridgelines in the **middle third**: the headline sits over the lower
 left, and social crops take the centre. This is the only image where going

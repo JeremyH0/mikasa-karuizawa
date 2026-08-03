@@ -7,6 +7,11 @@ Built as a sibling of `thekaruizawaestate.com/hc-property` — same Astro + Tail
 v4 stack, same i18n registry shape, same self-hosted font strategy, same rsync
 deploy. Moving between the two should feel like reading the same codebase twice.
 
+Working on this codebase? Read [`CLAUDE.md`](CLAUDE.md) as well — it carries the
+conventions and the specific traps (Tailwind v4's `translate` vs `transform`,
+the shared `max-w-shell` width, why `public/` images are never optimised by
+Astro) that this file does not.
+
 ```bash
 npm install
 npm run dev      # http://localhost:4321
@@ -23,27 +28,32 @@ Requires Node ≥ 22.12.
 
 | | |
 |---|---|
-| **Languages built** | English only — see *Languages* below |
-| **Photography** | Awaiting high-resolution finals. All 8 slots laid out, each rendering a placeholder at the correct ratio. Filenames + minimum resolutions in [`public/images/ASSETS.md`](public/images/ASSETS.md) |
+| **Languages built** | All four — `en` · `ja` · `zh-Hans` · `zh-Hant` |
+| **Photography** | All 8 slots filled from the deck. The hero is built from an upscaled plate; the three interior renders are still 678 px originals and are the weakest assets on the page — see [`public/images/ASSETS.md`](public/images/ASSETS.md) |
+| **Enquiry form** | ⚠️ Wired end to end, but **no recipient mailbox is set**, and it needs PHP — see *Deploy* |
 | **Domain** | ⚠️ Placeholder (`mikasa-karuizawa.com`) in `astro.config.mjs` and `public/robots.txt` |
 | **Unverified copy** | ⚠️ Travel times, contact address — see [`docs/CONTENT.md`](docs/CONTENT.md) |
 
-Payload, English build: **~68 KB gzipped** total (51 KB JS, 7 KB CSS, 10 KB HTML),
-plus Latin fonts. No third-party requests of any kind.
+Payload, per page: **~75 KB gzipped** (49 KB JS, 8 KB CSS, 16 KB HTML) plus
+72 KB of Latin fonts. Images are the real weight — 2.0 MB across all eight,
+of which the hero is 545 KB. No third-party requests of any kind.
 
 ---
 
 ## Languages
 
 Four dictionaries exist and are complete: `en`, `ja`, `zh-Hans`, `zh-Hant`.
-Only English is currently **built**.
+**All four are currently built.**
 
 The switch is one line — `src/i18n/config.ts`:
 
 ```ts
-export const locales: readonly Locale[] = ['en'];        // now
-export const locales: readonly Locale[] = allLocales;    // all four
+export const locales: readonly Locale[] = allLocales;    // now — all four
+export const locales: readonly Locale[] = ['en'];        // English-only launch
 ```
+
+The `ja` / `zh-Hans` / `zh-Hant` files are marked in their own headers as
+drafts that have not had a native review. That review is still outstanding.
 
 Everything downstream reads that array and nothing else: route generation, the
 sitemap, hreflang alternates, the header switcher, the footer, and the
@@ -73,9 +83,13 @@ canonical URL.
 
 ## Fonts, and why nothing loads from Google
 
-Cormorant Garamond (display) and Plus Jakarta Sans (body) are **self-hosted**
-from `src/assets/fonts/`. CJK glyphs come from the **reader's own system fonts**,
+**Marcellus** (display) and **Manrope** (body) are self-hosted from
+`src/assets/fonts/`. CJK glyphs come from the **reader's own system fonts**,
 never a webfont.
+
+The faces are deliberately *not* hc-property's Cormorant Garamond + Plus Jakarta
+Sans. Two separate properties under one vendor should not read as the same
+listing — see the note at the top of `src/styles/global.css`.
 
 This is not an optimisation, it is a requirement:
 
@@ -163,12 +177,31 @@ before drawing a fifth.
 
 ---
 
-## Deploy (Xserver)
+## Deploy
+
+There are **two** targets, and they are not equivalent.
+
+### Vercel — preview (what `git push` does today)
+
+`main` tracks the `vercel` remote, so pushing deploys a preview build. The site
+is static, so everything renders correctly there **except the enquiry form**:
+`public/inquiry.php` is PHP, and Vercel does not execute PHP. The form will fail
+to send on any Vercel URL. It fails *visibly* — the client shows the error
+message rather than a false success — but it does not work.
+
+Treat Vercel as a way to review design and copy, never as the place a buyer
+submits an enquiry.
+
+### Xserver — production
 
 ```bash
 cp .env.deploy.example .env.deploy   # fill in, it is gitignored
 npm run deploy
 ```
+
+This is the target the site is actually built for: Apache + PHP, which is what
+the enquiry form needs. `.env.deploy` is **not** in the repo, so this cannot run
+until the SSH credentials are filled in.
 
 Builds to `dist/`, then rsyncs over SSH. Xserver SSH is **port 10022** and must
 be enabled in サーバーパネル first.
@@ -193,7 +226,8 @@ src/
 ├── i18n/            config.ts ← the locale switch; en · ja · zh-Hans · zh-Hant
 ├── layouts/         Layout.astro — head, meta, hreflang, motion primer
 ├── components/      Hero · Overview · Location · Land · SitePlan · Concept ·
-│                    Inquiry · Footer · Navigation · LanguagePrompt · Figure
+│                    Inquiry · Footer · Navigation · LanguagePrompt · Figure ·
+│                    FeatureIcon · StructuredData
 ├── pages/           [...locale].astro · sitemap.xml.ts · 404.astro
 ├── scripts/         motion.ts — the whole animation engine
 ├── styles/          global.css (tokens, CJK, motion primitives) · fonts.css
@@ -205,4 +239,28 @@ docs/CONTENT.md      copy provenance + everything still unverified
 ```
 
 Palette is sampled from the deck: `bone #F2F1EC`, `forest #3A4133`,
-`brass #B9A57C`, `ink #26261F`, `stone #8A897E`.
+`brass #B9A57C`, `ink #26261F`, `stone #8A897E`. Two further tokens in
+`global.css` are measured rather than chosen — `--color-paper #F3EEE7`, sampled
+from the survey scan so its edges dissolve into the panel behind it, and
+`--container-shell 1920px`, the one page width every section and the header
+share.
+
+---
+
+## Images are optimised by a script, not by Astro
+
+`Figure.astro` loads from `/public` by URL, so **Astro applies no processing at
+all** — files there are copied byte for byte into `dist/`. Dropping an 8 MB PNG
+in `public/images/` ships an 8 MB PNG to every visitor.
+
+```bash
+npm run images   # src/assets/images/ → public/images/, via sharp
+```
+
+Originals live in `src/assets/images/`; jobs are declared in
+`scripts/optimize-images.mjs`. The current run takes 21 MB down to 1.9 MB. It is
+idempotent, so re-run it after replacing any original.
+
+Two traps worth knowing before swapping a source image are written up in
+[`CLAUDE.md`](CLAUDE.md) — silent non-enlargement of undersized sources, and
+keeping the component's `width`/`height` in step with the new ratio.

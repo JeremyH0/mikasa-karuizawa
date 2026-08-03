@@ -17,6 +17,7 @@
  *   data-count="2926.84"     number counts up to the value, locale-formatted
  *   data-nav                 sticky header that gains a background once scrolled
  *   data-nav-dark            section that flips the header to light-on-dark
+ *   data-to-top              back-to-top control, revealed past the first screen
  *
  * Start states live in global.css under `html.motion-ready`, NOT here — see
  * the comment there for why the ordering matters.
@@ -227,10 +228,23 @@ function initHeroImage() {
     if (!img) return;
 
     if (!prefersReduced) {
+        // The opening push-out. Long and nearly linear on purpose.
+        //
+        // `power2.out` over 2.6s spent most of its travel in the first second
+        // and then crawled — which reads as a quick zoom that stalls, not as a
+        // camera settling. `power1.out` over 6s keeps the rate close to even
+        // for most of the move and takes the speed out only at the very end,
+        // so the frame drifts open continuously and comes to rest without a
+        // visible stop.
+        //
+        // force3D pins the layer to the GPU for the whole tween. Left on
+        // "auto" GSAP hands it back at the end, and re-rasterising a
+        // full-bleed 2560px plate at the moment it lands is exactly where a
+        // scaling image shows a hitch.
         gsap.fromTo(
             img,
             { scale: 1.14 },
-            { scale: 1, duration: 2.6, ease: 'power2.out' }
+            { scale: 1, duration: 6, ease: 'power1.out', force3D: true }
         );
 
         gsap.to(img, {

@@ -28,6 +28,7 @@ const zhHant: Dict = {
         menuDialogLabel: '導覽選單',
         placeLine: '舊輕井澤 · 三笠 · 長野',
         langLabel: '切換語言',
+        backToTop: '返回頂部',
     },
 
     langPrompt: {
@@ -37,12 +38,10 @@ const zhHant: Dict = {
     },
 
     hero: {
-        eyebrow: '舊輕井澤 — 三笠',
+        eyebrow: 'Old Karuizawa — 旧軽井沢',
         headingLine1: '靜臥於日本最負盛名的',
         headingLine2: '別墅勝地之一，',
         headingLine3: '一處森林環抱的私邸用地。',
-        place: '舊輕井澤',
-        placeLocal: 'Old Karuizawa',
         scroll: '向下捲動',
         alt: '黃昏時分俯瞰輕井澤森林，層疊山巒在暖色薄霧中漸次遠去。',
     },
@@ -66,6 +65,7 @@ const zhHant: Dict = {
         heading: '與輕井澤中心，僅咫尺之遙。',
         body: '基地位於市鎮中心以北，住宅街區漸次隱入森林之處。舊輕銀座大街、輕井澤車站以及通往東京的新幹線皆近在咫尺，而基地本身則為成熟林木完全遮蔽。',
         mapAlt: '輕井澤地圖，標示基地位於舊輕銀座大街與輕井澤車站以北。',
+        mapCaption: '此圖為示意圖，非按實際比例繪製。',
         pins: {
             site: '基地位置',
             ginza: '舊輕銀座大街',
@@ -100,6 +100,7 @@ const zhHant: Dict = {
             north: '北',
             road: '道路',
             scaleLabel: '公尺',
+            enlarge: '檢視完整測量圖',
             disclaimer:
                 '本圖為示意圖，未依實測精度繪製。境界尺寸依賣方提供之測量圖，買方應以登記地籍圖核實為準。',
         },
@@ -110,6 +111,16 @@ const zhHant: Dict = {
         heading: '為森林所環抱的靜謐宅邸。',
         body: '建蔽率 30%，容積率 50%。這樣的條件，容得下一座從容舒展的宅邸，深藏於自家林木之後。建築低伏於地景之中，讓森林始終是每一扇窗外的主角。',
         note: '圖片為概念示意，僅呈現本基地的一種可能方案，並非已核准之設計。建物不包含在本次交易範圍內。',
+        // Short labels for the desktop plate switcher. Deliberately NOT the
+        // `images` strings above — those are long descriptive alt text, right
+        // for a screen reader describing the picture, far too long for the
+        // name of a button that selects it.
+        plates: {
+            aerial: '鳥瞰',
+            exterior: '外觀',
+            bathroom: '浴室',
+            bedroom: '臥室',
+        },
         images: {
             aerial: '概念圖：林中空地上，一座覆以寬闊歇山屋頂的平層宅邸，沐浴在黃昏光線中。',
             exterior: '概念圖：自草地望向宅邸，露臺懸挑於坡地之上。',
@@ -118,16 +129,19 @@ const zhHant: Dict = {
         },
     },
 
-    inquiry: {
+    inquire: {
         eyebrow: '洽詢',
         heading: '歡迎洽詢。',
-        body: '本物件以非公開方式洽售。如需完整資料（含測量圖與產權明細），敬請聯繫 Hirafu Capital 合同會社。',
-        emailLabel: '電子郵件',
-        email: 'info@hirafucapital.com',
-        companyLabel: '賣方',
-        company: 'Hirafu Capital 合同會社',
-        cta: '透過電子郵件洽詢',
-        mailSubject: '洽詢 — 舊輕井澤 三笠 用地',
+        body: '本物件以非公開方式洽售。如需完整資料（含測量圖與產權明細），敬請透過下方表單與我們聯繫。',
+        name: '姓名',
+        email: '電子郵件',
+        message: '留言',
+        submit: '送出諮詢',
+        sending: '傳送中...',
+        successTitle: '感謝您的關注。',
+        successBody: '我們已收到您的諮詢，將盡快為您送上完整資料。',
+        error: '很抱歉，訊息傳送失敗。請直接寄送電子郵件至 info@mikasa-karuizawa.com。',
+        privacy: '您填寫的資訊僅用於回覆本次諮詢，絕不會提供給第三方。',
     },
 
     footer: {

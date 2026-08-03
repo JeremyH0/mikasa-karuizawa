@@ -31,7 +31,7 @@ export type Locale = (typeof allLocales)[number];
  * and no hreflang pointing at a URL that does not exist. Freeze the English
  * copy first, then flip this back to `allLocales`.
  */
-export const locales: readonly Locale[] = ['en'];
+export const locales: readonly Locale[] = allLocales;
 
 export const defaultLocale: Locale = 'en';
 

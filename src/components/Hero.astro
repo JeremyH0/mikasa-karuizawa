@@ -36,7 +36,7 @@ const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
         src="/images/hero-forest.jpg"
         alt={t.hero.alt}
         width={2560}
-        height={1440}
+        height={1700}
         loading="eager"
         fetchpriority="high"
         tone="forest"
@@ -84,30 +84,70 @@ const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
     >
     </div>
 
-    <div class="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col justify-end px-6 pb-24 md:px-10 md:pb-28 lg:px-14 lg:pb-32">
-        <p data-hero class="eyebrow mb-7 text-brass">{t.hero.eyebrow}</p>
+    {/* The headline and the scroll cue are ONE row, aligned on their bottom
+        edges — not two stacked blocks.
 
-        <h1
-            data-hero-lines
-            class="display max-w-[22ch] text-bone text-[clamp(1.9rem,5.2vw,4.35rem)]"
-        >
-            {lines.map((line) => (
-                <span class="line-mask"><span>{line}</span></span>
-            ))}
-        </h1>
+        With the place line removed there was nothing left to sit under the
+        headline, and the cue's own row left a 48px gap below the last line
+        before the corner. Putting both in a single `items-end` row closes that
+        gap and lands the last line of the headline on the same baseline as the
+        foot of the scroll rule, so the two opposite corners of the plate are
+        set by the same horizontal. The text block then sits properly into the
+        bottom-left corner instead of floating above it.
 
-        <div data-hero class="mt-12 flex items-end justify-between gap-8">
-            <div class="flex items-baseline gap-4">
-                <span class="font-serif text-xl tracking-[0.2em] text-bone/90 md:text-2xl">
-                    {t.hero.place}
-                </span>
-                <span class="text-xs tracking-[0.25em] text-bone/45">{t.hero.placeLocal}</span>
+        The cue is `hidden … sm:flex`, so on a phone this row has a single
+        child and the headline simply keeps the full width. */}
+    <div class="relative z-10 mx-auto flex h-full max-w-shell flex-col justify-end px-6 pb-24 md:px-10 md:pb-28 lg:px-14 lg:pb-32">
+        <div class="flex items-end justify-between gap-10">
+            <div>
+                <p data-hero class="eyebrow mb-7 text-brass">{t.hero.eyebrow}</p>
+
+                {/* Ceiling (2.6rem). Deliberately restrained, and two steps
+                    down from the 4.35rem this started at.
+
+                    At 4.35rem the longest line — line 3, 36 characters — could
+                    not fit the column at any desktop width, so the headline
+                    always broke into four lines with a long first line and two
+                    stubs under it. It filled the screen by brute force and read
+                    as oversized rather than as the composition the copy was
+                    written for.
+
+                    At 2.6rem all three authored lines hold on one line each
+                    from 1280px up, so the break pattern is the one that was
+                    written, and the headline sits as a quiet block against the
+                    photograph instead of covering it. The plate is the hero
+                    here; the words caption it. Anything above roughly 3.5rem
+                    starts wrapping line 3 again on a 1440 screen, which is the
+                    hard limit if this is ever retuned.
+
+                    Floor (1.62rem). The largest size at which line 1 still fits
+                    a 390px phone in one piece. Line 3 wraps at any phone width
+                    no matter what — `text-wrap: balance` in global.css is what
+                    keeps that wrap even instead of orphaning the last word. */}
+                <h1
+                    data-hero-lines
+                    class="display max-w-[34ch] text-bone text-[clamp(1.62rem,4.2vw,2.6rem)]"
+                >
+                    {lines.map((line) => (
+                        <span class="line-mask"><span>{line}</span></span>
+                    ))}
+                </h1>
             </div>
 
+            {/* The place name used to sit below the headline as a second serif
+                line, "Old Karuizawa 旧軽井沢". It is gone: those words are
+                already in the eyebrow above, in the header wordmark, in the
+                Overview heading and in the footer, and a fifth repeat directly
+                under the headline read as filler rather than emphasis.
+
+                pb-1 nudges the rule's foot onto the headline's baseline rather
+                than its descender box, which is where the eye reads the line as
+                ending. */}
             <a
                 href="#overview"
+                data-hero
                 data-scroll-cue
-                class="group hidden shrink-0 items-center gap-3 text-[0.65rem] tracking-[0.3em] uppercase text-bone/60 transition-colors duration-500 hover:text-bone sm:flex"
+                class="group hidden shrink-0 items-center gap-3 pb-1 text-[0.65rem] tracking-[0.3em] uppercase text-bone/60 transition-colors duration-500 hover:text-bone sm:flex"
             >
                 {t.hero.scroll}
                 <span class="relative block h-10 w-px overflow-hidden bg-bone/25">

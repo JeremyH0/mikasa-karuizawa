@@ -1,11 +1,13 @@
 ---
-// Closing enquiry band.
+// Enquiry form — same mechanism as thekaruizawaestate.com/hc-property:
+// posts to public/inquiry.php, works with JS disabled (real action/method,
+// :target reveals the confirmation), upgraded to fetch when JS is available
+// so the page never navigates. Styled to THIS site's design system (gold on
+// bone, Marcellus/Manrope), not copied verbatim from hc-property's zinc UI.
 //
-// A mailto link, not a form. The estate is offered privately to a small
-// audience, and a form on a static host needs a PHP endpoint, spam handling
-// and a privacy notice to collect data it would only ever email onward. If a
-// form is wanted later, hc-property already has `public/inquiry.php` and its
-// no-JS fallback to copy from.
+// ⚠ The recipient mailbox is not decided yet — see public/inquiry.php and
+// inquiry-config.sample.php. The form is fully wired and will submit
+// correctly the moment a real address is set there.
 import { useTranslations, type Locale } from '../i18n';
 
 interface Props {
@@ -14,58 +16,92 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-
-const mailto = `mailto:${t.inquiry.email}?subject=${encodeURIComponent(t.inquiry.mailSubject)}`;
 ---
 
 <section id="inquire" class="bg-bone py-24 md:py-32 lg:py-40">
-    <div class="mx-auto max-w-[1600px] px-6 md:px-10 lg:px-14">
-        <div class="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-24">
-            <div>
-                <p data-animate class="eyebrow">{t.inquiry.eyebrow}</p>
+    <div class="mx-auto max-w-2xl px-6 md:px-10 lg:px-14">
+        <div class="text-center">
+            <p data-animate class="eyebrow">{t.inquire.eyebrow}</p>
 
-                <h2 data-lines class="display mt-6 max-w-[14ch] text-[clamp(1.9rem,4vw,3.2rem)]">
-                    <span class="line-mask"><span>{t.inquiry.heading}</span></span>
-                </h2>
+            <h2 data-lines class="display mx-auto mt-6 max-w-[16ch] text-[clamp(1.9rem,4vw,3.2rem)]">
+                <span class="line-mask"><span>{t.inquire.heading}</span></span>
+            </h2>
 
-                <div data-animate data-animate-delay="0.1" class="mt-10 h-px w-16 bg-brass" aria-hidden="true"></div>
-            </div>
+            <div data-animate data-animate-delay="0.1" class="mx-auto mt-10 h-px w-16 bg-brass" aria-hidden="true"></div>
 
-            <div class="flex flex-col justify-center">
-                <p data-animate class="max-w-[46ch] text-[0.95rem] leading-[1.85] text-ink/75">
-                    {t.inquiry.body}
-                </p>
+            <p data-animate data-animate-delay="0.15" class="mx-auto mt-10 max-w-[46ch] text-[0.95rem] leading-[1.85] text-ink/75">
+                {t.inquire.body}
+            </p>
+        </div>
 
-                <dl class="mt-12 space-y-6">
-                    <div data-animate data-animate-delay="0.1" class="border-t border-ink/12 pt-5">
-                        <dt class="text-[0.68rem] tracking-[0.28em] uppercase text-stone">
-                            {t.inquiry.companyLabel}
-                        </dt>
-                        <dd class="mt-2 font-serif text-xl tracking-[0.06em]">{t.inquiry.company}</dd>
+        {/* Form container */}
+        <div id="form-container" class="mt-16 w-full transition-opacity duration-500">
+            <form id="inquiry-form" action="/inquiry.php" method="POST" class="flex flex-col gap-10">
+                <input type="hidden" name="locale" value={locale} />
+
+                {/* Set by JS on load; used to reject impossibly fast bot
+                    submissions. Absent for no-JS visitors, in which case the
+                    server simply skips that check. */}
+                <input type="hidden" name="ts" id="form-ts" value="" />
+
+                {/* Honeypot. Hidden from people, irresistible to bots.
+                    Not display:none — some bots skip those. */}
+                <div class="absolute h-px w-px overflow-hidden" style="left:-9999px" aria-hidden="true">
+                    <label for="website">Website</label>
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+                </div>
+
+                <div data-animate data-animate-delay="0.2" class="grid gap-8 sm:grid-cols-2">
+                    <div class="flex flex-col gap-2">
+                        <label for="name" class="text-[0.68rem] tracking-[0.22em] uppercase text-stone">
+                            {t.inquire.name}
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            class="border-b border-ink/25 bg-transparent py-2 font-serif text-lg text-ink transition-colors focus:border-brass-dim focus:outline-none"
+                        />
                     </div>
-
-                    <div data-animate data-animate-delay="0.16" class="border-t border-ink/12 pt-5">
-                        <dt class="text-[0.68rem] tracking-[0.28em] uppercase text-stone">
-                            {t.inquiry.emailLabel}
-                        </dt>
-                        <dd class="mt-2">
-                            <a
-                                href={mailto}
-                                class="font-serif text-xl tracking-[0.04em] underline-offset-[6px] transition-colors duration-300 hover:text-brass-dim hover:underline"
-                            >
-                                {t.inquiry.email}
-                            </a>
-                        </dd>
+                    <div class="flex flex-col gap-2">
+                        <label for="email" class="text-[0.68rem] tracking-[0.22em] uppercase text-stone">
+                            {t.inquire.email}
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            class="border-b border-ink/25 bg-transparent py-2 font-serif text-lg text-ink transition-colors focus:border-brass-dim focus:outline-none"
+                        />
                     </div>
-                </dl>
+                </div>
 
-                <a
+                <div data-animate data-animate-delay="0.26" class="flex flex-col gap-2">
+                    <label for="message" class="text-[0.68rem] tracking-[0.22em] uppercase text-stone">
+                        {t.inquire.message}
+                    </label>
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="4"
+                        required
+                        class="resize-none border-b border-ink/25 bg-transparent py-2 font-serif text-lg text-ink transition-colors focus:border-brass-dim focus:outline-none"
+                    ></textarea>
+                </div>
+
+                {/* data-sending carries the only string the client script
+                    needs; the script itself stays language-agnostic. */}
+                <button
+                    type="submit"
+                    id="submit-btn"
+                    data-sending={t.inquire.sending}
                     data-animate
-                    data-animate-delay="0.22"
-                    href={mailto}
-                    class="group mt-12 inline-flex w-fit items-center gap-4 border border-ink/25 px-9 py-4 text-[0.72rem] tracking-[0.26em] uppercase transition-colors duration-500 hover:bg-ink hover:text-bone"
+                    data-animate-delay="0.32"
+                    class="group mx-auto mt-2 flex w-fit items-center gap-4 border border-ink/25 px-9 py-4 text-[0.72rem] tracking-[0.26em] uppercase transition-colors duration-500 hover:bg-ink hover:text-bone disabled:cursor-wait disabled:opacity-50"
                 >
-                    {t.inquiry.cta}
+                    <span id="submit-text">{t.inquire.submit}</span>
                     <svg
                         viewBox="0 0 24 24"
                         class="h-3.5 w-3.5 transition-transform duration-500 ease-[var(--ease-estate)] group-hover:translate-x-1.5"
@@ -76,8 +112,112 @@ const mailto = `mailto:${t.inquiry.email}?subject=${encodeURIComponent(t.inquiry
                     >
                         <path d="M4 12h15m-6-6 6 6-6 6" />
                     </svg>
-                </a>
+                </button>
+
+                <p id="form-error" class="hidden text-center text-[0.8rem] leading-relaxed text-red-800/80">
+                    {t.inquire.error}
+                </p>
+
+                <p data-animate data-animate-delay="0.36" class="mx-auto max-w-md text-center text-[0.7rem] leading-relaxed text-stone">
+                    {t.inquire.privacy}
+                </p>
+            </form>
+        </div>
+
+        {/* Success message — hidden by default, revealed by JS on a
+            successful fetch, or by :target when JS is unavailable. */}
+        <div id="success-message" class="mt-16 hidden flex-col items-center gap-6 py-8 text-center opacity-0 transition-opacity duration-700">
+            <div class="flex h-16 w-16 items-center justify-center rounded-full border border-brass/40">
+                <svg viewBox="0 0 24 24" class="h-6 w-6 text-brass-dim" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
+            <h3 class="display text-2xl">{t.inquire.successTitle}</h3>
+            <p class="max-w-md text-[0.9rem] leading-relaxed text-ink/70">
+                {t.inquire.successBody}
+            </p>
         </div>
     </div>
 </section>
+
+<script>
+    // ---------------------------------------------------------------------
+    // Enquiry form handler — ported from hc-property's [...locale].astro.
+    // The form has a real action/method and works without JavaScript.
+    // This upgrades it to a fetch so the page never navigates away.
+    // ---------------------------------------------------------------------
+    const inquiryForm = document.getElementById('inquiry-form') as HTMLFormElement | null;
+    const formContainer = document.getElementById('form-container');
+    const successMessage = document.getElementById('success-message');
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const submitText = document.getElementById('submit-text');
+    const formError = document.getElementById('form-error');
+    const formTs = document.getElementById('form-ts') as HTMLInputElement | null;
+
+    // Stamp load time so the server can reject impossibly fast submissions.
+    if (formTs) formTs.value = String(Date.now());
+
+    function showSuccess() {
+        if (!formContainer || !successMessage) return;
+        formContainer.classList.add('opacity-0');
+
+        setTimeout(() => {
+            formContainer.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+            successMessage.classList.add('flex');
+            // Tiny delay so the browser registers the display change first.
+            setTimeout(() => successMessage.classList.remove('opacity-0'), 50);
+        }, 500); // matches the form container's transition duration
+    }
+
+    // The no-JS path posts to inquiry.php, which redirects back here with
+    // ?sent=1 or ?error=1. Reuse the already-translated markup rather than
+    // duplicating any copy in PHP.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sent') === '1') {
+        if (formContainer && successMessage) {
+            formContainer.classList.add('hidden');
+            successMessage.classList.remove('hidden', 'opacity-0');
+            successMessage.classList.add('flex');
+        }
+    } else if (params.get('error') === '1' && formError) {
+        formError.classList.remove('hidden');
+    }
+
+    if (inquiryForm && formContainer && successMessage && submitBtn && submitText) {
+        inquiryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            formError?.classList.add('hidden');
+
+            // The label comes from the button's data-sending attribute so
+            // this script carries no copy of its own and needs no changes
+            // when a language is added.
+            submitBtn.disabled = true;
+            const idleLabel = submitText.textContent;
+            submitText.textContent = submitBtn.dataset.sending || 'Sending...';
+
+            try {
+                const res = await fetch(inquiryForm.action, {
+                    method: 'POST',
+                    body: new FormData(inquiryForm),
+                    // Marks this as the fetch path so PHP replies with JSON
+                    // instead of a redirect.
+                    headers: { 'X-Requested-With': 'fetch' },
+                });
+                const data = await res.json().catch(() => ({ ok: false }));
+
+                if (res.ok && data.ok) {
+                    showSuccess();
+                    return;
+                }
+                throw new Error('send failed');
+            } catch {
+                // Never leave the visitor believing a message was sent.
+                formError?.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitText.textContent = idleLabel;
+            }
+        });
+    }
+</script>

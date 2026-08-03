@@ -14,10 +14,22 @@
 // the note in scripts/optimize-images.mjs. Do not mix the two sets: they are
 // not the same house, and a buyer shown both would reasonably be misled.
 //
-// The deck's renders are also low-resolution — the three band images are only
-// 678 px wide originals, which is why the band is capped at three narrow
-// columns rather than run full-bleed. If better exports of THIS scheme arrive,
-// they slot straight in under the same filenames.
+// ⚠ RESOLUTION. The deck's three interior renders are only 678 px wide
+// originals. That used to be the reason this section kept them in a narrow
+// three-up band and never enlarged them.
+//
+// The desktop switcher below deliberately breaks that rule: selecting one puts
+// it on the full-width stage, which displays a 678 px file at ~1330 px — just
+// under a 2× upscale. It survives the enlargement better than the number
+// suggests, because these are smooth CG renders with no fine texture or type
+// in them, and it was judged worth the trade for being able to show the
+// interiors at a size a buyer can actually read.
+//
+// It is still an upscale, and it is the FIRST thing to revisit if better
+// exports of this scheme arrive: drop them into src/assets/images/ under the
+// same mikasa-photo-06/07/08 names, re-run `npm run images`, and the stage
+// sharpens with no code change. The aerial needs no such caveat — at 1658 px
+// it is being scaled DOWN on the stage.
 //
 // The deck presents these as finished photography, but they are renders of a
 // house that does not exist on a plot being sold as bare land. Left
@@ -34,15 +46,50 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-const band = [
-    { src: '/images/villa-exterior.jpg', alt: t.concept.images.exterior, tone: 'forest' as const },
-    { src: '/images/villa-bathroom.jpg', alt: t.concept.images.bathroom, tone: 'interior' as const },
-    { src: '/images/villa-bedroom.jpg', alt: t.concept.images.bedroom, tone: 'interior' as const },
+// One list, used twice: once stacked in the stage and once as the row of
+// plates beneath it. The aerial is FIRST and is the default view.
+//
+// It is also the only entry hidden from the row below lg — see the note on the
+// row itself. Everything else about the two renders is driven from here, so a
+// fifth image is one line and cannot fall out of sync between the two.
+const plates = [
+    {
+        src: '/images/villa-aerial.jpg',
+        alt: t.concept.images.aerial,
+        label: t.concept.plates.aerial,
+        tone: 'forest' as const,
+        width: 1658,
+        height: 1176,
+    },
+    {
+        src: '/images/villa-exterior.jpg',
+        alt: t.concept.images.exterior,
+        label: t.concept.plates.exterior,
+        tone: 'forest' as const,
+        width: 678,
+        height: 452,
+    },
+    {
+        src: '/images/villa-bathroom.jpg',
+        alt: t.concept.images.bathroom,
+        label: t.concept.plates.bathroom,
+        tone: 'interior' as const,
+        width: 678,
+        height: 452,
+    },
+    {
+        src: '/images/villa-bedroom.jpg',
+        alt: t.concept.images.bedroom,
+        label: t.concept.plates.bedroom,
+        tone: 'interior' as const,
+        width: 678,
+        height: 452,
+    },
 ];
 ---
 
 <section id="concept" data-nav-dark class="bg-forest-deep py-24 md:py-32 lg:py-40">
-    <div class="mx-auto max-w-[1600px] px-6 md:px-10 lg:px-14">
+    <div class="mx-auto max-w-shell px-6 md:px-10 lg:px-14">
         <div class="grid gap-12 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)] lg:items-end lg:gap-20">
             <div>
                 <div data-animate class="mb-8 h-px w-14 bg-brass" aria-hidden="true"></div>
@@ -61,50 +108,115 @@ const band = [
             </p>
         </div>
 
-        {/* Hero render.
+        {/* Hero render — shown clean, no top scrim.
 
-            The top scrim is not decoration. This is a gold section, and this
-            plate scrolls beneath the header — gold over its sun-ray highlights
-            measures 1.2:1, and reaching AA needs ~58% black. The gradient
-            ramps to the section colour at the top edge, where gold reads 6.24
-            against forest-deep, and clears the image entirely within 9rem.
+            This IS a gold section, and this plate does scroll beneath the
+            header: gold over its sun-ray highlights measures 1.2:1, which
+            fails AA on its own. The image is kept clean anyway, per request —
+            same trade already made for the hero in Hero.astro. The
+            `is-over-photo` state in Navigation.astro is what keeps the header
+            legible here: bone text with a text-shadow, a perceptual fix
+            rather than a measured one (WCAG gives no credit for text-shadow).
+            If AA compliance over this image specifically is ever required,
+            the fix is a top gradient like the one this replaced — ramp to
+            #2A2F25 over ~9rem, which measured 4.95:1. */}
+        {/* The stage. All four plates are stacked here and cross-faded; the
+            row below selects between them on desktop.
 
-            It also reads well on its own: the render emerges out of the
-            section rather than being pasted onto it. */}
-        <div class="relative mt-16 overflow-hidden md:mt-20">
-            <Figure
-                src="/images/villa-aerial.jpg"
-                alt={t.concept.images.aerial}
-                width={1658}
-                height={1176}
-                tone="forest"
-                class="w-full"
-                imgClass="h-full w-full object-cover"
-                data-reveal-img
-            />
-            <div
-                class="pointer-events-none absolute inset-x-0 top-0 h-36"
-                style="background: linear-gradient(to bottom, #2A2F25 0%, rgba(42,47,37,0.72) 38%, rgba(42,47,37,0) 100%);"
-            >
-            </div>
+            The stage keeps the aerial's 1658×1176 ratio whatever is showing,
+            because a box that resized itself per image would shunt the note
+            and the whole rest of the page up and down on every click. The
+            three interior plates are a slightly wider 3:2, so object-cover
+            takes a little off their sides rather than letterboxing them.
+
+            data-reveal-img sits on the WRAPPER, not on an image. The curtain
+            wipe should open the frame once, not re-run on whichever plate
+            happens to be underneath. */}
+        <div
+            data-reveal-img
+            class="relative mt-16 aspect-[1658/1176] overflow-hidden md:mt-20"
+        >
+            {plates.map((plate, i) => (
+                <Figure
+                    src={plate.src}
+                    alt={plate.alt}
+                    width={plate.width}
+                    height={plate.height}
+                    tone={plate.tone}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    class:list={[
+                        'absolute inset-0 h-full w-full transition-opacity duration-700 ease-[var(--ease-estate)]',
+                        i === 0 ? 'opacity-100' : 'opacity-0',
+                    ]}
+                    imgClass="h-full w-full object-cover"
+                    data-concept-plate
+                />
+            ))}
+
+            {/* Nested sentinel: the section is otherwise a `data-nav-dark`
+                (gold) zone, but gold fails over THESE images specifically.
+                This marks only the stage's band as `photo`, so the header is
+                bone for the few hundred px the picture occupies and gold
+                again the moment it scrolls past — same mechanism as the
+                sentinel in Hero.astro. Works because `is-over-photo` is
+                defined after `is-over-dark` in Navigation.astro and wins
+                the cascade when both are active at once. */}
+            <div data-nav-dark="photo" aria-hidden="true" class="pointer-events-none absolute inset-0"></div>
         </div>
 
-        {/* Three-up band */}
-        <div class="mt-5 grid gap-5 sm:grid-cols-3">
-            {band.map((img, i) => (
-                <div class="overflow-hidden">
+        {/* The plate row.
+
+            Below lg this is exactly what it always was: the three interior
+            views, side by side, static. The aerial is hidden here because it
+            is already the large plate above it, and a hidden <button> is not
+            focusable — so the no-op controls never reach the tab order at the
+            widths where switching is off.
+
+            At lg the aerial joins the row as a fourth item and the whole row
+            becomes the switcher. `disabled` is toggled by matchMedia in the
+            script below rather than by CSS, because pointer-events alone would
+            still leave a keyboard user able to focus and press a control that
+            does nothing. */}
+        <div class="mt-5 grid gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {plates.map((plate, i) => (
+                <button
+                    type="button"
+                    data-concept-thumb
+                    data-index={String(i)}
+                    aria-label={plate.label}
+                    aria-pressed={i === 0 ? 'true' : 'false'}
+                    class:list={[
+                        'thumb group relative block overflow-hidden text-left disabled:cursor-default',
+                        i === 0 && 'hidden lg:block',
+                    ]}
+                >
                     <Figure
-                        src={img.src}
-                        alt={img.alt}
+                        src={plate.src}
+                        alt=""
                         width={678}
                         height={452}
-                        tone={img.tone}
+                        tone={plate.tone}
                         class="w-full"
-                        imgClass="h-full w-full object-cover transition-transform duration-[1.6s] ease-[var(--ease-estate)] hover:scale-[1.04]"
+                        imgClass="h-full w-full object-cover transition-transform duration-[1.6s] ease-[var(--ease-estate)] group-hover:scale-[1.04]"
                         data-reveal-img
                         data-animate-delay={String(i * 0.12)}
                     />
-                </div>
+
+                    {/* Selection mark, drawn inside the frame so it never
+                        changes the row's layout. Hairline brass, matching the
+                        rules used elsewhere in the section. */}
+                    <span
+                        aria-hidden="true"
+                        class="thumb-mark pointer-events-none absolute inset-0 border border-brass opacity-0 transition-opacity duration-500 ease-[var(--ease-estate)]"
+                    ></span>
+
+                    <span
+                        aria-hidden="true"
+                        class="thumb-label pointer-events-none absolute bottom-0 left-0 right-0 hidden bg-gradient-to-t from-forest-deep/85 to-transparent px-3 pb-2.5 pt-8 text-[0.6rem] tracking-[0.22em] uppercase text-bone/85 lg:block"
+                    >
+                        {plate.label}
+                    </span>
+                </button>
             ))}
         </div>
 
@@ -113,3 +225,88 @@ const band = [
         </p>
     </div>
 </section>
+
+<style>
+    /* All of the switcher's appearance is scoped to lg, because below it the
+       row is not a switcher — it is three pictures. A dimmed "unselected"
+       state there would be dimming images for no reason the reader can act on. */
+    @media (width >= 64rem) {
+        .thumb {
+            opacity: 0.5;
+            transition: opacity 0.5s var(--ease-estate);
+        }
+
+        .thumb:hover,
+        .thumb:focus-visible {
+            opacity: 0.85;
+        }
+
+        .thumb.is-active {
+            opacity: 1;
+        }
+
+        .thumb.is-active .thumb-mark {
+            opacity: 1;
+        }
+    }
+
+    /* Below lg the buttons are disabled, and a UA's default disabled styling
+       would grey out photographs that are meant to be seen normally. */
+    .thumb:disabled {
+        opacity: 1;
+    }
+</style>
+
+<script>
+    // Desktop plate switcher.
+    //
+    // Progressive enhancement throughout: the stage renders with the aerial
+    // already visible and the other three at opacity 0 from the markup, so with
+    // no JavaScript the section looks exactly as it did before this was added.
+    const plates = document.querySelectorAll<HTMLElement>('[data-concept-plate]');
+    const thumbs = document.querySelectorAll<HTMLButtonElement>('[data-concept-thumb]');
+
+    if (plates.length && thumbs.length) {
+        // Must match Tailwind's `lg`, and the media query in the style block
+        // above. This is the width at which the row becomes a control.
+        const desktop = window.matchMedia('(width >= 64rem)');
+
+        let active = 0;
+
+        const show = (index: number) => {
+            active = index;
+            plates.forEach((plate, i) => {
+                plate.classList.toggle('opacity-100', i === index);
+                plate.classList.toggle('opacity-0', i !== index);
+            });
+            thumbs.forEach((thumb, i) => {
+                thumb.classList.toggle('is-active', i === index);
+                thumb.setAttribute('aria-pressed', String(i === index));
+            });
+        };
+
+        thumbs.forEach((thumb) => {
+            thumb.addEventListener('click', () => show(Number(thumb.dataset.index ?? 0)));
+        });
+
+        const sync = () => {
+            const on = desktop.matches;
+            thumbs.forEach((thumb) => {
+                thumb.disabled = !on;
+            });
+            // Narrowing the window has to reset the stage. The large plate is
+            // the aerial in the small-screen design, and leaving the bedroom up
+            // there after a resize would show a view whose thumbnail is now
+            // sitting right underneath it.
+            //
+            // `show` runs on every sync, including the first, so the selected
+            // mark on the aerial is painted by the same code path that draws it
+            // for every later click — the markup only carries the start state,
+            // it does not also have to carry the selected styling.
+            show(on ? active : 0);
+        };
+
+        desktop.addEventListener('change', sync);
+        sync();
+    }
+</script>

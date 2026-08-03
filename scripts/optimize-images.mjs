@@ -44,7 +44,15 @@ const OUT = path.join(ROOT, 'public/images');
  */
 const JOBS = [
     // --- Deck plates -------------------------------------------------------
-    { in: 'mikasa-photo-01.png', out: 'hero-forest.jpg', width: 2560, format: 'jpeg', quality: 84 },
+    // The hero source is the UPSCALED plate, not the deck's own export.
+    // mikasa-photo-01.png is only 1357px wide, which is under half the width of
+    // the slot it fills — this is a full-bleed 100svh image and the LCP element
+    // on every page. mikasa-hero-upscaled.png is 2714px, so it actually feeds
+    // the 2560 target instead of being left at native size by
+    // withoutEnlargement. Keep the deck original on disk as the provenance
+    // copy; if a true high-resolution export is ever delivered, point this
+    // `in:` at that and re-run.
+    { in: 'mikasa-hero-upscaled.png', out: 'hero-forest.jpg', width: 2560, format: 'jpeg', quality: 84 },
     { in: 'mikasa-photo-02.png', out: 'location-map.jpg', width: 2000, format: 'jpeg', quality: 86 },
     { in: 'mikasa-photo-03.png', out: 'approach-lane.jpg', width: 1800, format: 'jpeg', quality: 84 },
     { in: 'mikasa-photo-04.png', out: 'site-survey.png', width: 2000, format: 'palette', colours: 128 },

@@ -30,6 +30,7 @@ const ja: Dict = {
         menuDialogLabel: 'ナビゲーションメニュー',
         placeLine: '旧軽井沢・三笠・長野',
         langLabel: '言語を変更する',
+        backToTop: 'ページ上部へ戻る',
     },
 
     langPrompt: {
@@ -39,12 +40,10 @@ const ja: Dict = {
     },
 
     hero: {
-        eyebrow: '旧軽井沢 — 三笠',
+        eyebrow: 'Old Karuizawa — 旧軽井沢',
         headingLine1: '日本有数の別荘地に佇む、',
         headingLine2: '森に抱かれた',
         headingLine3: 'プライベートな邸宅用地。',
-        place: '旧軽井沢',
-        placeLocal: 'Old Karuizawa',
         scroll: 'スクロール',
         alt: '黄金色の光に包まれた軽井沢の森を空から望む。幾重にも連なる山並みが霞の奥へと続いていく。',
     },
@@ -68,6 +67,7 @@ const ja: Dict = {
         heading: '軽井沢の中心に、ほど近く。',
         body: '敷地は市街地の北側、住宅地が森へと溶け込んでいくあたりに位置します。旧軽銀座、軽井沢駅、そして東京へと向かう新幹線。そのいずれもが手の届く距離にありながら、敷地そのものは深い木立にすっかりと守られています。',
         mapAlt: '軽井沢の地図。旧軽銀座と軽井沢駅の北側に敷地の位置を示す。',
+        mapCaption: 'イメージ図であり、縮尺は正確ではありません。',
         pins: {
             site: '敷地',
             ginza: '旧軽銀座',
@@ -102,6 +102,7 @@ const ja: Dict = {
             north: '北',
             road: '道路',
             scaleLabel: 'メートル',
+            enlarge: '測量図を拡大表示',
             disclaimer:
                 '図は概念図であり、実測に基づく正確な形状を示すものではありません。境界寸法は売主提供の測量図によるものです。ご購入にあたっては公図・地積測量図にてご確認ください。',
         },
@@ -112,6 +113,16 @@ const ja: Dict = {
         heading: '森に抱かれた、静謐な邸宅。',
         body: '建ぺい率30%、容積率50%。この敷地は、自らの木立の奥深くにゆったりと構える一邸を招き入れます。低く水平に伸び、風景に静かに沿う建築。どの部屋からも、主役はあくまで森であり続けます。',
         note: '画像はイメージであり、この敷地における計画の一例を示すものです。確定した設計ではなく、建物は販売対象に含まれません。',
+        // Short labels for the desktop plate switcher. Deliberately NOT the
+        // `images` strings above — those are long descriptive alt text, right
+        // for a screen reader describing the picture, far too long for the
+        // name of a button that selects it.
+        plates: {
+            aerial: '俯瞰',
+            exterior: '外観',
+            bathroom: '浴室',
+            bedroom: '寝室',
+        },
         images: {
             aerial: '森の中の開けた場所に、大きな寄棟屋根を戴く平屋の邸宅が佇むイメージ。夕暮れの光に包まれて。',
             exterior: '草地側から見た邸宅のイメージ。デッキが傾斜地の上へと張り出している。',
@@ -120,16 +131,19 @@ const ja: Dict = {
         },
     },
 
-    inquiry: {
+    inquire: {
         eyebrow: 'お問い合わせ',
         heading: 'ご関心をお寄せください。',
-        body: '本物件は非公開でのご紹介となります。測量図および権利関係を含む詳細資料をご希望の方は、Hirafu Capital 合同会社までご連絡ください。',
-        emailLabel: 'メール',
-        email: 'info@hirafucapital.com',
-        companyLabel: '売主',
-        company: 'Hirafu Capital 合同会社',
-        cta: 'メールでお問い合わせ',
-        mailSubject: 'お問い合わせ — 旧軽井沢 三笠 邸宅用地',
+        body: '本物件は非公開でのご紹介となります。測量図および権利関係を含む詳細資料をご希望の方は、下記フォームよりお問い合わせください。',
+        name: 'お名前',
+        email: 'メールアドレス',
+        message: 'ご用件',
+        submit: '送信する',
+        sending: '送信中...',
+        successTitle: 'ありがとうございます。',
+        successBody: 'お問い合わせを承りました。詳細資料とともに、追ってご連絡いたします。',
+        error: '送信できませんでした。お手数ですが info@mikasa-karuizawa.com まで直接メールをお送りください。',
+        privacy: 'ご記入いただいた情報は、本件へのご返信のみに使用し、第三者に提供することはありません。',
     },
 
     footer: {

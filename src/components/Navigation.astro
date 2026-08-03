@@ -31,7 +31,7 @@ const showLanguages = locales.length > 1;
     data-nav
     class="fixed inset-x-0 top-0 z-50"
 >
-    <div class="nav-bar mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5 transition-[padding] duration-500 ease-[var(--ease-estate)] md:px-10 lg:px-14">
+    <div class="nav-bar mx-auto flex max-w-shell items-center justify-between px-6 py-5 transition-[padding] duration-500 ease-[var(--ease-estate)] md:px-10 lg:px-14">
         <a
             href="#top"
             class="nav-ink nav-mark group flex flex-col leading-none transition-[color,text-shadow] duration-500"
@@ -97,9 +97,14 @@ const showLanguages = locales.length > 1;
             </a>
         </nav>
 
+        {/* 44px, not the 40px this was: the bars inside stay 24×12, but the hit
+            area is now the one every published minimum-target guideline asks
+            for, and this is the only control a phone visitor must find. -mr-2
+            pulls the widened box back out so the icon stays optically aligned
+            with the wordmark opposite it. */}
         <button
             type="button"
-            class="nav-ink flex h-10 w-10 items-center justify-center transition-colors duration-500 lg:hidden"
+            class="nav-ink -mr-2 flex h-11 w-11 items-center justify-center transition-colors duration-500 lg:hidden"
             aria-expanded="false"
             aria-controls="mobile-menu"
             aria-label={t.nav.menuLabel}
@@ -117,7 +122,7 @@ const showLanguages = locales.length > 1;
     are not reachable by screen reader or Tab while off-screen. */}
 <div
     id="mobile-menu"
-    class="fixed inset-0 z-40 flex translate-y-[-100%] flex-col justify-center bg-forest px-8 transition-transform duration-700 ease-[var(--ease-estate)] lg:hidden"
+    class="fixed inset-0 z-40 flex flex-col justify-center overflow-y-auto overscroll-contain bg-forest px-8 py-24 transition-transform duration-700 ease-[var(--ease-estate)] lg:hidden"
     inert
     data-mobile-menu
 >
@@ -278,9 +283,41 @@ const showLanguages = locales.length > 1;
         padding-bottom: 0.9rem;
     }
 
-    /* Open state for the mobile menu. */
+    /* ==================================================================
+       MOBILE MENU SLIDE
+       ==================================================================
+       Both the closed and open positions are written HERE, on the same CSS
+       property, and deliberately not with Tailwind's `translate-y-*`.
+
+       Tailwind v4 compiles `translate-y-[-100%]` to the INDIVIDUAL
+       `translate` property, not to `transform`. The two are separate
+       properties and both apply — `translate` is composed first — so a
+       `transform: translateY(0)` here does NOT cancel a `translate: 0 -100%`
+       there. It only ever added an identity matrix on top, and the panel
+       stayed one full viewport above the fold: the burger was clickable,
+       aria-expanded flipped, and nothing appeared. That was the bug.
+
+       Using one property for both halves of the state makes it impossible
+       for them to disagree again. `transition-transform` in v4 already
+       covers transform, translate, scale and rotate, so the class on the
+       element still animates this. */
+    :global([data-mobile-menu]) {
+        translate: 0 -100%;
+    }
     :global([data-mobile-menu].is-open) {
-        transform: translateY(0);
+        translate: 0 0;
+    }
+
+    /* While the menu is open the bar sits on flat forest green, whatever the
+       section underneath it happens to be. Without this the close (X) keeps
+       the colour the scroll position gave it — over Location or Inquiry that
+       is dark ink on dark green, i.e. an invisible close button. Scoped to
+       below lg because the menu itself is. */
+    @media (width < 64rem) {
+        :global([data-nav].is-menu-open) .nav-ink {
+            color: var(--color-bone);
+            text-shadow: none;
+        }
     }
 </style>
 
@@ -319,10 +356,17 @@ const showLanguages = locales.length > 1;
     const barTop = document.querySelector<HTMLElement>('[data-bar-top]');
     const barBottom = document.querySelector<HTMLElement>('[data-bar-bottom]');
 
+    const navBar = document.querySelector<HTMLElement>('[data-nav]');
+
     if (menuToggle && mobileMenu) {
         const setMenu = (open: boolean) => {
             menuToggle.setAttribute('aria-expanded', String(open));
             mobileMenu.classList.toggle('is-open', open);
+
+            // Pins the bar to menu colours while the panel covers the page —
+            // see the `is-menu-open` rule above for why the scroll-derived
+            // colour cannot be trusted here.
+            navBar?.classList.toggle('is-menu-open', open);
 
             // `inert` keeps the off-screen panel out of the tab order and the
             // accessibility tree; toggling only a transform would leave the
@@ -355,6 +399,23 @@ const showLanguages = locales.length > 1;
                 setMenu(false);
                 menuToggle.focus();
             }
+        });
+
+        // Close on the way past lg, or the page locks up.
+        //
+        // The panel and its button are both `lg:hidden`, but the scroll lock
+        // this function applies is not — it lives on document.body and on
+        // Lenis. Cross the breakpoint with the menu open and CSS hides the
+        // menu and the close button while the lock stays on: the page cannot
+        // be scrolled and there is no longer any control to release it.
+        //
+        // This is not a hypothetical. 1024px sits inside the rotation of a
+        // common tablet — an iPad Air is 820 wide in portrait and 1180 in
+        // landscape — so opening the menu and turning the device is enough to
+        // reach it. 64rem must stay in step with Tailwind's `lg`.
+        const desktop = window.matchMedia('(width >= 64rem)');
+        desktop.addEventListener('change', (e) => {
+            if (e.matches) setMenu(false);
         });
     }
 </script>

@@ -53,6 +53,53 @@
   --color-ink: #26261f;
   --color-stone: #8a897e;
 
+  /* The surveyor's paper.
+     Sampled from public/images/site-survey.png — it is a 16-colour palette
+     PNG and this is palette index 0, the flat tone that forms its outer
+     border and 31% of the drawing.
+
+     It exists as a token because the scan is very slightly warmer than bone
+     (#F3EEE7 against #F2F1EC — 1/3/5 apart per channel). On a small element
+     that is invisible, but the plan is a large rectangle with hard straight
+     edges, and against bone those edges read as a seam around the picture.
+     Surfacing the panel that holds the drawing in the paper tone instead
+     lets the plate dissolve into it.
+
+     If a new survey scan replaces that file, re-sample it and update this
+     one value — see public/images/ASSETS.md. */
+  --color-paper: #f3eee7;
+
+  /* ------------------------------------------------------------------
+     THE SHELL — one page width, used by everything.
+     ------------------------------------------------------------------
+     Tailwind turns a --container-* variable into a `max-w-*` utility, so
+     this is `max-w-shell`. It is set HERE rather than written inline
+     because five things share it — the header, the hero, Concept,
+     Location and the footer — and they are not independent.
+
+     The header is fixed and transparent, so its wordmark and its Enquire
+     button sit directly above section content all the way down the page.
+     If one of those five carried a different width, the bar would be
+     visibly out of register with whatever it was floating over. Change
+     this value and they all move together; change one call site and you
+     have introduced a misalignment that only shows up mid-scroll.
+
+     1920px rather than the 1600px this started at. At 1600 a 1920 display
+     — much the most common large screen — left 160px of dead margin down
+     each side ON TOP of the 56px gutter, so the bar and the headline sat
+     in a narrow channel with the page floating inside the monitor. Set to
+     1920 the cap stops binding there entirely and the layout gets the
+     same tight 56px gutter a 1440 laptop gets, which is what "reaches the
+     edge of the screen" actually means here.
+
+     It stays a cap rather than becoming full-width because the header is
+     transparent and overlays the sections: an uncapped bar on a 2560
+     display would put the wordmark ~380px to the left of the section
+     content it floats above, and that misregistration is far more
+     noticeable than a wide margin. Beyond 1920 the margin grows, and that
+     is the intended behaviour. */
+  --container-shell: 1920px;
+
   /* One shared easing so every transition on the site decelerates
      identically. Slow-out is what reads as "expensive". */
   --ease-estate: cubic-bezier(0.22, 1, 0.36, 1);
@@ -177,6 +224,20 @@ body {
   line-height: 1.2;
 }
 
+/* Every headline on the site is hand-broken into .line-mask segments sized
+   for a desktop measure. On a phone the browser re-wraps those segments, and
+   the default greedy algorithm fills each line to the edge and drops whatever
+   is left onto the next — which is how "A private woodland estate" ended up
+   as "A private woodland" over a lone "estate".
+
+   `balance` distributes a wrapped segment evenly across its lines instead.
+   It is capped by the browser at a handful of lines, which is exactly the
+   shape of every heading here, and it degrades to normal wrapping where it is
+   unsupported — so it can only improve the rag, never break the layout. */
+.display .line-mask > span {
+  text-wrap: balance;
+}
+
 /* Small caps label used above every section heading. */
 .eyebrow {
   font-family: var(--font-sans);
@@ -185,6 +246,69 @@ body {
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-brass-dim);
+}
+
+/* ==========================================================================
+   POINTER
+   ==========================================================================
+   The system arrow, redrawn in the estate's brass.
+
+   Done with `cursor: url(...)` rather than a JavaScript element that chases
+   the pointer. That matters more than it sounds: a scripted cursor is painted
+   by the page, so it is always at least one frame behind the real pointer and
+   it stutters whenever the main thread is busy — which, on a page running
+   Lenis and a dozen ScrollTriggers, is exactly while you are moving. This is
+   composited by the OS, so it is pixel-exact and perfectly smooth, costs no
+   script and no rAF loop, and cannot break.
+
+   Both images are inline SVG data URIs, so nothing is fetched. The two
+   trailing numbers are the hotspot — the pixel inside the image that IS the
+   pointer — and they must stay on the arrow's tip, scaled with the image.
+
+   The arrow is brass with a hairline edge in the DEEP brass, not in ink. It
+   needs an edge of some kind — brass on bone measures 2.1:1, so an unoutlined
+   arrow goes soft over the light sections — but an ink outline at a weight
+   heavy enough to do that job reads as a black-bordered arrow, which is a
+   different object from the one this palette wants. Deep brass at 0.6 defines
+   the silhouette against bone while staying inside the brass family, and over
+   the forest plates the fill carries the shape on its own.
+
+   Gated to devices that actually have a pointer. On a touchscreen there is
+   nothing to draw and `pointer: coarse` skips the whole block. A keyword
+   fallback (`auto` / `pointer` / `text`) follows every URL so a browser that
+   refuses the SVG still gets a sane cursor. */
+
+@media (hover: hover) and (pointer: fine) {
+  html {
+    cursor:
+      url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath d="M4 2 4 18.5 8.2 14.6 11 21 13.6 19.9 10.9 13.7 16.5 13.7Z" fill="%23B9A57C" stroke="%23756033" stroke-width=".6" stroke-linejoin="round"/%3E%3C/svg%3E')
+        4 2,
+      auto;
+  }
+
+  /* Anything actionable gets the same arrow a size larger and in the lighter
+     nav gold — the cursor itself becomes the hover state, which is why the
+     links on this site need no underline to feel live. Hotspot scales with
+     the image: the tip sits at 4,2 of a 24 box, so at 28px it is 5,2. */
+  a,
+  button,
+  label,
+  summary,
+  [role="button"] {
+    cursor:
+      url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"%3E%3Cpath d="M4 2 4 18.5 8.2 14.6 11 21 13.6 19.9 10.9 13.7 16.5 13.7Z" fill="%23C0AD86" stroke="%23756033" stroke-width=".6" stroke-linejoin="round"/%3E%3C/svg%3E')
+        5 2,
+      pointer;
+  }
+
+  /* Text fields keep the native I-beam. An arrow cannot show you where the
+     caret will land, and the only conversion point on this site is a form. */
+  input,
+  textarea,
+  select,
+  [contenteditable] {
+    cursor: text;
+  }
 }
 
 /* ==========================================================================

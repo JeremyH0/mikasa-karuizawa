@@ -48,7 +48,7 @@ const prompts = enabled
             data-current={locale}
             data-prompts={JSON.stringify(prompts)}
             hidden
-            class="fixed inset-x-0 bottom-0 z-[60] translate-y-full border-t border-ink/10 bg-bone/95 backdrop-blur-md transition-transform duration-700 ease-[var(--ease-estate)]"
+            class="fixed inset-x-0 bottom-0 z-[60] border-t border-ink/10 bg-bone/95 backdrop-blur-md transition-transform duration-700 ease-[var(--ease-estate)]"
         >
             <div class="mx-auto flex max-w-4xl flex-col items-center gap-4 px-6 py-5 sm:flex-row sm:justify-between">
                 <p class="text-sm text-ink/80" data-prompt-message />
@@ -70,8 +70,17 @@ const prompts = enabled
 }
 
 <style>
+    /* Hidden and shown positions on ONE property. Tailwind v4's
+       `translate-y-full` compiles to the individual `translate` property,
+       which a `transform: translateY(0)` here cannot cancel — both apply, so
+       the banner unhid itself and then stayed a full height below the fold.
+       Same defect as the mobile menu in Navigation.astro; see the longer note
+       there. */
+    :global([data-lang-prompt]) {
+        translate: 0 100%;
+    }
     :global([data-lang-prompt].is-visible) {
-        transform: translateY(0);
+        translate: 0 0;
     }
 </style>
 

@@ -28,3 +28,5 @@ pnpm-debug.log*
 
 # contact form config — real one lives on the server, never in git
 inquiry-config.php
+.vercel
+.env*

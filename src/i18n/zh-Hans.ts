@@ -115,6 +115,14 @@ const zhHans: Dict = {
         // `images` strings above — those are long descriptive alt text, right
         // for a screen reader describing the picture, far too long for the
         // name of a button that selects it.
+        // One short line beside each plate on desktop. Kept to a single
+        // sentence: these sit in the white space of the cascade, and anything
+        // longer turns that breathing room into a second column of body copy.
+        notes: {
+            exterior: '露台向草地探出，身后林木悄然合拢。',
+            bathroom: '石材、暖汤，与窗外逼近的绿意。',
+            bedroom: '醒来即在树冠之中，眼前别无他物。',
+        },
         plates: {
             aerial: '鸟瞰',
             exterior: '外观',

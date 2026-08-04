@@ -1,6 +1,6 @@
 ---
-// Page 4 of the deck: the Master Plan spread — one large aerial over a
-// three-up band.
+// Page 4 of the deck: the Master Plan spread, laid out as a drifting
+// composition of four plates that react to the pointer on desktop.
 //
 // ⚠️ TWO DIFFERENT BUILDINGS EXIST IN THE SUPPLIED MATERIAL. Read this before
 // adding an image here.
@@ -14,22 +14,19 @@
 // the note in scripts/optimize-images.mjs. Do not mix the two sets: they are
 // not the same house, and a buyer shown both would reasonably be misled.
 //
-// ⚠ RESOLUTION. The deck's three interior renders are only 678 px wide
-// originals. That used to be the reason this section kept them in a narrow
-// three-up band and never enlarged them.
+// ⚠ RESOLUTION — this is what shapes the layout below.
 //
-// The desktop switcher below deliberately breaks that rule: selecting one puts
-// it on the full-width stage, which displays a 678 px file at ~1330 px — just
-// under a 2× upscale. It survives the enlargement better than the number
-// suggests, because these are smooth CG renders with no fine texture or type
-// in them, and it was judged worth the trade for being able to show the
-// interiors at a size a buyer can actually read.
+// The three interior renders are only 678 px wide originals. A click-to-enlarge
+// gallery was built here first and removed for exactly that reason: putting a
+// 678 px file on a full-width stage displayed it at ~1330 px, and a 2x upscale
+// of a render looks like a 2x upscale of a render.
 //
-// It is still an upscale, and it is the FIRST thing to revisit if better
-// exports of this scheme arrive: drop them into src/assets/images/ under the
-// same mikasa-photo-06/07/08 names, re-run `npm run images`, and the stage
-// sharpens with no code change. The aerial needs no such caveat — at 1658 px
-// it is being scaled DOWN on the stage.
+// So nothing in this section enlarges anything. Every plate is sized at or
+// below its native width and the composition earns its interest from
+// arrangement and movement instead. If better exports of this scheme arrive,
+// drop them into src/assets/images/ under the same mikasa-photo-06/07/08 names
+// and re-run `npm run images`; only then is there any reason to show them
+// bigger.
 //
 // The deck presents these as finished photography, but they are renders of a
 // house that does not exist on a plot being sold as bare land. Left
@@ -46,12 +43,42 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-// One list, used twice: once stacked in the stage and once as the row of
-// plates beneath it. The aerial is FIRST and is the default view.
+// `cell` is the lg placement inside a 12-column grid; `depth` is how far the
+// plate travels under the pointer, relative to its siblings. Both are per-plate
+// because the composition is asymmetric on purpose — see the note on the grid.
 //
-// It is also the only entry hidden from the row below lg — see the note on the
-// row itself. Everything else about the two renders is driven from here, so a
-// fifth image is one line and cannot fall out of sync between the two.
+// A ZIGZAG CASCADE, and the plates genuinely overlap.
+//
+// Reading down: aerial left, exterior right, bathroom left, bedroom right —
+// each pulled up by a negative margin so it sits ON the corner of the one
+// before it. Consecutive plates deliberately SHARE COLUMN 7 (1-7 / 7-11 / 3-7 /
+// 7-11); that shared band is where the overlap happens, and it is what makes
+// the group read as a stack of prints on a table rather than as four pictures
+// in a grid. Change a col-start without checking its neighbour and the
+// overlap quietly disappears — the plates go back to sitting side by side.
+//
+// The overlap is a CORNER CLIP, not a collision: ~80px across and only 16-24px
+// down, which is barely one plate crossing the next. Deeper versions were tried
+// three times and every one buried too much of the picture underneath — past
+// this the plates stop reading as a cascade and start reading as a pile, and
+// you lose the very images the section exists to show. The vertical figure is
+// the one to move if this is ever retuned; the horizontal one is fixed by the
+// shared column and should be left alone.
+//
+// The interiors stay at span 5 and no wider. That is the resolution ceiling,
+// not a compositional choice: 5/12 of the 1920 shell is ~715px against a
+// 678px original, which is the most these files take before softening.
+//
+// `z` ascends with the cascade so each new plate lands on top of the last, and
+// each carries a shadow so the seam is legible as one plate over another.
+//
+// `depth` is pointer-parallax strength. The aerial is the anchor and moves
+// least; the smaller plates travel further around it, which is what separates
+// them into layers. `side` places the floating caption on the plate's outer
+// edge — away from the overlap, so it is never buried by the next plate down.
+//
+// Below lg none of the cell classes apply: the four stack in source order and
+// nothing overlaps, floats or moves.
 const plates = [
     {
         src: '/images/villa-aerial.jpg',
@@ -60,6 +87,12 @@ const plates = [
         tone: 'forest' as const,
         width: 1658,
         height: 1176,
+        cell: 'sm:col-span-3 lg:col-span-7 lg:col-start-1 lg:row-start-1 lg:z-10',
+        depth: '0.5',
+        index: '01',
+        side: 'left' as const,
+        note: t.concept.body,
+        noteCell: 'lg:col-start-9 lg:col-span-4 lg:row-start-1 lg:self-center',
     },
     {
         src: '/images/villa-exterior.jpg',
@@ -68,6 +101,12 @@ const plates = [
         tone: 'forest' as const,
         width: 678,
         height: 452,
+        cell: 'lg:col-span-5 lg:col-start-7 lg:row-start-2 lg:-mt-6 lg:z-20',
+        depth: '1.35',
+        index: '02',
+        side: 'right' as const,
+        note: t.concept.notes.exterior,
+        noteCell: 'lg:col-start-2 lg:col-span-4 lg:row-start-2 lg:self-center',
     },
     {
         src: '/images/villa-bathroom.jpg',
@@ -76,6 +115,12 @@ const plates = [
         tone: 'interior' as const,
         width: 678,
         height: 452,
+        cell: 'lg:col-span-5 lg:col-start-3 lg:row-start-3 lg:-mt-4 lg:z-30',
+        depth: '1.05',
+        index: '03',
+        side: 'left' as const,
+        note: t.concept.notes.bathroom,
+        noteCell: 'lg:col-start-9 lg:col-span-4 lg:row-start-3 lg:self-center',
     },
     {
         src: '/images/villa-bedroom.jpg',
@@ -84,139 +129,235 @@ const plates = [
         tone: 'interior' as const,
         width: 678,
         height: 452,
+        cell: 'lg:col-span-5 lg:col-start-7 lg:row-start-4 lg:-mt-6 lg:z-40',
+        depth: '1.5',
+        index: '04',
+        side: 'right' as const,
+        note: t.concept.notes.bedroom,
+        noteCell: 'lg:col-start-2 lg:col-span-4 lg:row-start-4 lg:self-center',
     },
-];
----
+];---
 
 <section id="concept" data-nav-dark class="bg-forest-deep py-24 md:py-32 lg:py-40">
-    <div class="mx-auto max-w-shell px-6 md:px-10 lg:px-14">
-        <div class="grid gap-12 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)] lg:items-end lg:gap-20">
-            <div>
-                <div data-animate class="mb-8 h-px w-14 bg-brass" aria-hidden="true"></div>
-                <p data-animate class="eyebrow text-brass">{t.concept.eyebrow}</p>
-                <h2 data-lines class="display mt-6 max-w-[16ch] text-bone text-[clamp(1.75rem,3.4vw,2.9rem)]">
-                    <span class="line-mask"><span>{t.concept.heading}</span></span>
-                </h2>
-            </div>
-
-            <p
-                data-animate
-                data-animate-delay="0.15"
-                class="max-w-[52ch] text-[0.95rem] leading-[1.85] text-bone/70"
-            >
-                {t.concept.body}
-            </p>
+    <div data-float-scene class="mx-auto max-w-shell px-6 md:px-10 lg:px-14">
+        {/* The heading stands alone now. The body paragraph that used to sit
+            beside it has moved down into the cascade, alongside the aerial —
+            it is the one piece of copy that describes what the pictures show,
+            so it belongs next to them rather than above them. That also gives
+            the aerial's empty right-hand side something to hold, instead of a
+            second short caption competing with the plate's own label. */}
+        <div data-float data-float-depth="0.18">
+            <div data-animate class="mb-8 h-px w-14 bg-brass" aria-hidden="true"></div>
+            <p data-animate class="eyebrow text-brass">{t.concept.eyebrow}</p>
+            <h2 data-lines class="display mt-6 max-w-[16ch] text-bone text-[clamp(1.75rem,3.4vw,2.9rem)]">
+                <span class="line-mask"><span>{t.concept.heading}</span></span>
+            </h2>
         </div>
 
-        {/* Hero render — shown clean, no top scrim.
+        {/* The plates: a zigzag cascade that overlaps and drifts.
 
-            This IS a gold section, and this plate does scroll beneath the
-            header: gold over its sun-ray highlights measures 1.2:1, which
-            fails AA on its own. The image is kept clean anyway, per request —
-            same trade already made for the hero in Hero.astro. The
-            `is-over-photo` state in Navigation.astro is what keeps the header
-            legible here: bone text with a text-shadow, a perceptual fix
-            rather than a measured one (WCAG gives no credit for text-shadow).
-            If AA compliance over this image specifically is ever required,
-            the fix is a top gradient like the one this replaced — ramp to
-            #2A2F25 over ~9rem, which measured 4.95:1. */}
-        {/* The stage. All four plates are stacked here and cross-faded; the
-            row below selects between them on desktop.
+            ⚠️ THE SIZES HERE ARE A RESOLUTION DECISION, NOT A LAYOUT ONE.
+            The three interior renders are 678px originals. A click-to-enlarge
+            gallery was built here first and removed: it displayed those 678px
+            files at ~1330px, and a 2x upscale of a render looks like one. So
+            nothing here enlarges anything — on a 1920 shell the interiors land
+            at ~700px and the aerial (1658px native) at ~1030px, every plate
+            scaled DOWN and every one sharp. If these column spans grow, the
+            softness comes straight back.
 
-            The stage keeps the aerial's 1658×1176 ratio whatever is showing,
-            because a box that resized itself per image would shunt the note
-            and the whole rest of the page up and down on every click. The
-            three interior plates are a slightly wider 3:2, so object-cover
-            takes a little off their sides rather than letterboxing them.
+            Movement is deliberately FLAT — translation only, no 3D tilt. A
+            rotated plate has to fake its own perspective, and against a hard
+            rectangular crop that reads as a card trick rather than as depth.
+            Sliding layers at different rates gives the same volume and stays
+            honest to the flat, printed feel the rest of the page has.
 
-            data-reveal-img sits on the WRAPPER, not on an image. The curtain
-            wipe should open the frame once, not re-run on whichever plate
-            happens to be underneath. */}
+            Three things move, all of them small:
+              · pointer   each plate slides toward the cursor, by its `depth`
+              · scroll    a slow vertical drift, again scaled by `depth`
+              · breath    a very slow zoom on the image inside its frame
+
+            The frames themselves never scale, only the images inside them, so
+            the composition never shifts and the overlaps stay put. See
+            initFloat in motion.ts. Desktop and real pointers only. */}
         <div
-            data-reveal-img
-            class="relative mt-16 aspect-[1658/1176] overflow-hidden md:mt-20"
+            class="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-3 md:mt-20 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-0"
         >
             {plates.map((plate, i) => (
-                <Figure
-                    src={plate.src}
-                    alt={plate.alt}
-                    width={plate.width}
-                    height={plate.height}
-                    tone={plate.tone}
-                    loading={i === 0 ? 'eager' : 'lazy'}
+                <>
+                {/* The line of copy that sits opposite its plate.
+
+                    The cascade leaves a real hole on the side each plate is
+                    NOT on, and filling it with a single sentence is what turns
+                    that from leftover space into a spread. Placement is
+                    explicit per plate (`noteCell`) rather than automatic,
+                    because the hole is a different shape at every step.
+
+                    It floats a little further than its picture (depth 1.6 vs
+                    ~0.5-1.5) so the words drift against the image rather than
+                    with it, and it fades up on scroll like every other block on
+                    the site. Desktop only — below lg there is no hole to fill
+                    and the plates are a plain stacked column. */}
+                <p
+                    data-float
+                    data-float-depth="1.6"
+                    data-animate
+                    data-animate-delay={String(0.15 + i * 0.08)}
                     class:list={[
-                        'absolute inset-0 h-full w-full transition-opacity duration-700 ease-[var(--ease-estate)]',
-                        i === 0 ? 'opacity-100' : 'opacity-0',
-                    ]}
-                    imgClass="h-full w-full object-cover"
-                    data-concept-plate
-                />
-            ))}
-
-            {/* Nested sentinel: the section is otherwise a `data-nav-dark`
-                (gold) zone, but gold fails over THESE images specifically.
-                This marks only the stage's band as `photo`, so the header is
-                bone for the few hundred px the picture occupies and gold
-                again the moment it scrolls past — same mechanism as the
-                sentinel in Hero.astro. Works because `is-over-photo` is
-                defined after `is-over-dark` in Navigation.astro and wins
-                the cascade when both are active at once. */}
-            <div data-nav-dark="photo" aria-hidden="true" class="pointer-events-none absolute inset-0"></div>
-        </div>
-
-        {/* The plate row.
-
-            Below lg this is exactly what it always was: the three interior
-            views, side by side, static. The aerial is hidden here because it
-            is already the large plate above it, and a hidden <button> is not
-            focusable — so the no-op controls never reach the tab order at the
-            widths where switching is off.
-
-            At lg the aerial joins the row as a fourth item and the whole row
-            becomes the switcher. `disabled` is toggled by matchMedia in the
-            script below rather than by CSS, because pointer-events alone would
-            still leave a keyboard user able to focus and press a control that
-            does nothing. */}
-        <div class="mt-5 grid gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {plates.map((plate, i) => (
-                <button
-                    type="button"
-                    data-concept-thumb
-                    data-index={String(i)}
-                    aria-label={plate.label}
-                    aria-pressed={i === 0 ? 'true' : 'false'}
-                    class:list={[
-                        'thumb group relative block overflow-hidden text-left disabled:cursor-default',
-                        i === 0 && 'hidden lg:block',
+                        'hidden leading-[1.9] lg:block',
+                        // The aerial's slot carries the section's body copy, so
+                        // it is set as body text. The other three are single
+                        // atmospheric lines and sit quieter and smaller.
+                        i === 0
+                            ? 'max-w-[46ch] text-[0.95rem] text-bone/70'
+                            : 'max-w-[34ch] text-[0.95rem] text-bone/55',
+                        plate.noteCell,
                     ]}
                 >
-                    <Figure
-                        src={plate.src}
-                        alt=""
-                        width={678}
-                        height={452}
-                        tone={plate.tone}
-                        class="w-full"
-                        imgClass="h-full w-full object-cover transition-transform duration-[1.6s] ease-[var(--ease-estate)] group-hover:scale-[1.04]"
-                        data-reveal-img
-                        data-animate-delay={String(i * 0.12)}
-                    />
+                    {plate.note}
+                </p>
 
-                    {/* Selection mark, drawn inside the frame so it never
-                        changes the row's layout. Hairline brass, matching the
-                        rules used elsewhere in the section. */}
-                    <span
-                        aria-hidden="true"
-                        class="thumb-mark pointer-events-none absolute inset-0 border border-brass opacity-0 transition-opacity duration-500 ease-[var(--ease-estate)]"
-                    ></span>
+                <div
+                    data-float
+                    data-float-depth={plate.depth}
+                    class:list={['group relative', plate.cell]}
+                >
+                    <div class="relative">
+                        {/* The gold mount — a SEPARATE LAYER, not padding.
 
-                    <span
+                            It is its own absolutely-positioned rectangle sitting
+                            4px proud of the picture on every side, rather than
+                            padding on a wrapper. Two reasons, and the second is
+                            the important one:
+
+                            1. A hairline is all this wants to be. Padding at
+                               this width starts to read as a chunky mat; a thin
+                               edge reads as a mounted print, and where two
+                               plates overlap it is the line that separates them
+                               — image-on-image is mush, image-on-gold-on-image
+                               has an unmistakable stacking order.
+
+                            2. Being a separate element, it can animate on its
+                               OWN clock. It carries the same curtain wipe as the
+                               picture with `data-reveal-delay`, so on scroll-in
+                               the photograph opens first and the gold edge
+                               follows a beat behind it. The frame arriving after
+                               its contents is what gives the reveal depth; both
+                               moving together just looks like one flat card.
+
+                            The shadow lives here too, so the mounted object
+                            casts one shadow instead of the picture casting one
+                            inside its own frame.
+
+                            lg only, like the rest of this layout. */}
+                        {/* It does NOT drift independently, deliberately.
+
+                            Giving the mount its own float depth was tried — the
+                            gold sliding a few pixels against its picture, so it
+                            read as a separate sheet. It looked wrong: the frame
+                            slid out from under the photograph and the gold
+                            vanished down one edge at the extremes.
+
+                            It also made a rendering problem worse. The gold is
+                            a rectangle 1.5px larger than the picture, so what
+                            you see is a 1.5px margin. Put that on a transform
+                            and it lands on fractional device pixels, where a
+                            sliver that thin can round away to nothing on one
+                            side and double on the other — which is the flicker
+                            that showed up at 1px. Static, it renders evenly.
+
+                            1.5px is the setting: 1px was too fragile against
+                            that rounding, 2px started reading as a mat rather
+                            than a hairline.
+
+                            What it DOES keep is its own reveal clock — the
+                            wipe below runs a fifth of a second behind the
+                            picture's, so the photograph opens and the gold edge
+                            closes in after it. That is the layered feel, done
+                            with timing instead of position. */}
+                        <div
+                            data-reveal-img
+                            data-reveal-delay="0.22"
+                            aria-hidden="true"
+                            class="pointer-events-none absolute -inset-[1.5px] hidden bg-brass shadow-[0_40px_90px_-40px_rgba(0,0,0,0.85)] lg:block"
+                        >
+                        </div>
+
+                        {/* overflow-hidden is what turns this into a window: the
+                            image inside it breathes without the frame moving. */}
+                        <div class="relative overflow-hidden">
+                            <Figure
+                                src={plate.src}
+                                alt={plate.alt}
+                                width={plate.width}
+                                height={plate.height}
+                                tone={plate.tone}
+                                loading={i === 0 ? 'eager' : 'lazy'}
+                                class="w-full"
+                                imgClass="h-full w-full object-cover"
+                                data-reveal-img
+                                data-float-zoom
+                                data-animate-delay={String(i * 0.1)}
+                            />
+
+                            {/* NO nested `photo` sentinel here any more.
+
+                                There used to be one over the aerial, flipping
+                                the header from this section's gold to bone for
+                                the few hundred pixels the picture occupies. It
+                                was right on measurement — gold over this plate's
+                                sun-rays reads about 1.2:1 — and wrong to look
+                                at: the bar changed colour mid-section and then
+                                changed back, which registered as a glitch
+                                rather than as a response to anything.
+
+                                The section is one gold zone now. That is the
+                                same trade already made over the hero, for the
+                                same reason: a bar that holds one colour through
+                                a section is worth more here than a bar that is
+                                individually optimal over every object it
+                                crosses. If AA over this plate is ever required,
+                                the fix is a top gradient on the image — ramp to
+                                #2A2F25 over ~9rem, which measured 4.95:1 — not
+                                a colour flip. */}
+                        </div>
+                    </div>
+
+                    {/* The floating caption.
+
+                        Hung off the plate's OUTER edge — the side away from the
+                        overlap — so the next plate down never buries it, and
+                        sitting just BELOW the gold mount rather than across it.
+                        Straddling the mount was the first attempt and it fails
+                        on contrast: bone on brass measures 2.13:1, so the label
+                        half-disappears exactly where it crosses the gold. Clear
+                        of the mount it sits on forest-deep at 9.4:1 and stays
+                        readable along its whole length.
+
+                        It carries a slightly higher float depth than its own
+                        plate, so it drifts a little further than the picture it
+                        belongs to. That small disagreement is what gives the
+                        pair volume.
+
+                        Desktop only — below lg it is display:none and the
+                        plates are a plain stacked column, as before. */}
+                    <figcaption
+                        data-float
+                        data-float-depth={String(Number(plate.depth) + 0.55)}
                         aria-hidden="true"
-                        class="thumb-label pointer-events-none absolute bottom-0 left-0 right-0 hidden bg-gradient-to-t from-forest-deep/85 to-transparent px-3 pb-2.5 pt-8 text-[0.6rem] tracking-[0.22em] uppercase text-bone/85 lg:block"
+                        class:list={[
+                            'pointer-events-none absolute z-10 hidden items-baseline gap-3 lg:flex',
+                            plate.side === 'left' ? 'lg:left-0 lg:-bottom-9' : 'lg:right-0 lg:-bottom-9',
+                        ]}
                     >
-                        {plate.label}
-                    </span>
-                </button>
+                        <span class="font-serif text-[0.7rem] tracking-[0.3em] text-brass [text-shadow:0_2px_10px_rgb(0_0_0/0.65)]">
+                            {plate.index}
+                        </span>
+                        <span class="font-serif text-[1.05rem] tracking-[0.16em] text-bone [text-shadow:0_2px_14px_rgb(0_0_0/0.75)]">
+                            {plate.label}
+                        </span>
+                    </figcaption>
+                </div>
+                </>
             ))}
         </div>
 
@@ -225,88 +366,3 @@ const plates = [
         </p>
     </div>
 </section>
-
-<style>
-    /* All of the switcher's appearance is scoped to lg, because below it the
-       row is not a switcher — it is three pictures. A dimmed "unselected"
-       state there would be dimming images for no reason the reader can act on. */
-    @media (width >= 64rem) {
-        .thumb {
-            opacity: 0.5;
-            transition: opacity 0.5s var(--ease-estate);
-        }
-
-        .thumb:hover,
-        .thumb:focus-visible {
-            opacity: 0.85;
-        }
-
-        .thumb.is-active {
-            opacity: 1;
-        }
-
-        .thumb.is-active .thumb-mark {
-            opacity: 1;
-        }
-    }
-
-    /* Below lg the buttons are disabled, and a UA's default disabled styling
-       would grey out photographs that are meant to be seen normally. */
-    .thumb:disabled {
-        opacity: 1;
-    }
-</style>
-
-<script>
-    // Desktop plate switcher.
-    //
-    // Progressive enhancement throughout: the stage renders with the aerial
-    // already visible and the other three at opacity 0 from the markup, so with
-    // no JavaScript the section looks exactly as it did before this was added.
-    const plates = document.querySelectorAll<HTMLElement>('[data-concept-plate]');
-    const thumbs = document.querySelectorAll<HTMLButtonElement>('[data-concept-thumb]');
-
-    if (plates.length && thumbs.length) {
-        // Must match Tailwind's `lg`, and the media query in the style block
-        // above. This is the width at which the row becomes a control.
-        const desktop = window.matchMedia('(width >= 64rem)');
-
-        let active = 0;
-
-        const show = (index: number) => {
-            active = index;
-            plates.forEach((plate, i) => {
-                plate.classList.toggle('opacity-100', i === index);
-                plate.classList.toggle('opacity-0', i !== index);
-            });
-            thumbs.forEach((thumb, i) => {
-                thumb.classList.toggle('is-active', i === index);
-                thumb.setAttribute('aria-pressed', String(i === index));
-            });
-        };
-
-        thumbs.forEach((thumb) => {
-            thumb.addEventListener('click', () => show(Number(thumb.dataset.index ?? 0)));
-        });
-
-        const sync = () => {
-            const on = desktop.matches;
-            thumbs.forEach((thumb) => {
-                thumb.disabled = !on;
-            });
-            // Narrowing the window has to reset the stage. The large plate is
-            // the aerial in the small-screen design, and leaving the bedroom up
-            // there after a resize would show a view whose thumbnail is now
-            // sitting right underneath it.
-            //
-            // `show` runs on every sync, including the first, so the selected
-            // mark on the aerial is painted by the same code path that draws it
-            // for every later click — the markup only carries the start state,
-            // it does not also have to carry the selected styling.
-            show(on ? active : 0);
-        };
-
-        desktop.addEventListener('change', sync);
-        sync();
-    }
-</script>

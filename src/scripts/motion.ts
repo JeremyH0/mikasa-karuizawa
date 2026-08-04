@@ -17,6 +17,10 @@
  *   data-count="2926.84"     number counts up to the value, locale-formatted
  *   data-nav                 sticky header that gains a background once scrolled
  *   data-nav-dark            section that flips the header to light-on-dark
+ *   data-float-scene         container whose pointer position drives the below
+ *   data-float               plate that drifts and tilts toward the pointer
+ *   data-float-depth="1.4"   how strongly, relative to its siblings (default 1)
+ *   data-float-zoom          image that breathes slowly inside its own frame
  *   data-to-top              back-to-top control, revealed past the first screen
  *
  * Start states live in global.css under `html.motion-ready`, NOT here — see
@@ -173,11 +177,18 @@ function initScrollReveals() {
     });
 
     // Curtain wipe on images.
+    //
+    // `data-reveal-delay` lets one wipe trail another. It exists for the gold
+    // mounts in Concept.astro: the frame carries the same wipe as the picture
+    // it surrounds, a fifth of a second behind, so the photograph opens and the
+    // gold edge closes in after it. Both on the same clock would read as one
+    // flat card arriving.
     gsap.utils.toArray<HTMLElement>('[data-reveal-img]').forEach((el) => {
         gsap.to(el, {
             clipPath: 'inset(0 0 0% 0)',
             duration: 1.5,
             ease: 'power2.inOut',
+            delay: parseFloat(el.dataset.revealDelay ?? '0'),
             scrollTrigger: {
                 trigger: el,
                 start: 'top 88%',
@@ -228,24 +239,55 @@ function initHeroImage() {
     if (!img) return;
 
     if (!prefersReduced) {
-        // The opening push-out. Long and nearly linear on purpose.
+        // The opening push-out, then a very slow breath that never stops.
         //
-        // `power2.out` over 2.6s spent most of its travel in the first second
-        // and then crawled — which reads as a quick zoom that stalls, not as a
-        // camera settling. `power1.out` over 6s keeps the rate close to even
-        // for most of the move and takes the speed out only at the very end,
-        // so the frame drifts open continuously and comes to rest without a
-        // visible stop.
+        // ── Why it is not a zoom-out-then-zoom-back-in.
+        // A reversal big enough to notice reads as a bounce: the frame arrives,
+        // stops, and visibly changes its mind. On a still photograph that looks
+        // like a mistake rather than a camera move, and it undermines exactly
+        // the calm this section is trying to establish. What works instead is a
+        // return so slow and so small that it is never perceived as a
+        // direction change at all — you only notice the frame is not quite
+        // where you left it.
         //
-        // force3D pins the layer to the GPU for the whole tween. Left on
-        // "auto" GSAP hands it back at the end, and re-rasterising a
-        // full-bleed 2560px plate at the moment it lands is exactly where a
-        // scaling image shows a hitch.
-        gsap.fromTo(
-            img,
-            { scale: 1.14 },
-            { scale: 1, duration: 6, ease: 'power1.out', force3D: true }
-        );
+        // ── The numbers, and why they are what they are.
+        // The intro runs 9s from 1.14, nearly linear (`power1.out`), so the
+        // frame opens at an even rate and settles without a hard stop. An
+        // earlier `power2.out` over 2.6s spent most of its travel in the first
+        // second and then crawled, which read as a quick zoom that stalled.
+        //
+        // The breath that follows travels 4.5% over 20s each way on a
+        // sine.inOut, i.e. ~0.2% per second at its fastest. That is under the
+        // threshold at which motion is consciously tracked, which is the whole
+        // point — it keeps the plate feeling alive without ever asking to be
+        // watched. Raising either number is what would make this look weird;
+        // if it is ever retuned, move the DURATION, not the distance.
+        //
+        // force3D pins the layer to the GPU for the whole sequence. Left on
+        // "auto" GSAP hands it back at the end, and re-rasterising a full-bleed
+        // 2560px plate is exactly where a scaling image shows a hitch.
+        const camera = gsap.timeline();
+
+        camera
+            .fromTo(img, { scale: 1.14 }, { scale: 1, duration: 9, ease: 'power1.out', force3D: true })
+            .to(img, {
+                scale: 1.045,
+                duration: 20,
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true,
+                force3D: true,
+            });
+
+        // The breath repeats forever, so it must not burn frames on a section
+        // nobody is looking at. This parks the whole timeline once the hero has
+        // left the viewport and resumes it if the visitor scrolls back up.
+        ScrollTrigger.create({
+            trigger: img.closest('section') ?? img,
+            start: 'top bottom',
+            end: 'bottom top',
+            onToggle: (self) => (self.isActive ? camera.play() : camera.pause()),
+        });
 
         gsap.to(img, {
             yPercent: 14,
@@ -258,6 +300,153 @@ function initHeroImage() {
             },
         });
     }
+}
+
+/**
+ * Pointer-reactive float.
+ *
+ *   data-float-scene        the container the pointer is measured against
+ *   data-float              a plate inside it that reacts
+ *   data-float-depth="1.4"  how strongly, relative to the others (default 1)
+ *
+ * Three separate movements, all small, all flat — there is no 3D rotation
+ * anywhere here on purpose (see the note on `apply`):
+ *
+ *   1. pointer   each plate slides toward the cursor, scaled by its depth
+ *   2. scroll    a slow vertical drift, again scaled by depth
+ *   3. breath    a very slow zoom on the image inside its frame
+ *
+ * Because the depths differ, the group separates into layers as you move
+ * across or scroll past it. That separation IS the effect; a uniform shift
+ * would just look like the whole block sliding.
+ *
+ * Peak pointer travel is ~24px on the deepest plate. `quickTo` lerps toward
+ * each new pointer position over ~0.9s rather than tracking it directly, so
+ * fast mouse movement produces a smooth glide instead of jitter.
+ *
+ * Only the POINTER half is gated to desktop and real pointers — there is
+ * nothing to follow on a touchscreen. Scroll parallax and the breath run
+ * everywhere, since neither needs a cursor.
+ */
+function initFloat() {
+    if (prefersReduced) return;
+    // One call per scene. There are two — the Overview lane and the Concept
+    // cascade — and each measures the pointer against ITS OWN box, so a plate
+    // reacts to where the cursor is inside its own section rather than to some
+    // shared origin halfway down the page.
+    document.querySelectorAll<HTMLElement>('[data-float-scene]').forEach(initFloatScene);
+}
+
+function initFloatScene(scene: HTMLElement) {
+    // Scoped to this scene, not the document: `[data-float]` appears in more
+    // than one section now.
+    const plates = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll('[data-float]'));
+    if (!plates.length) return;
+
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const desktop = window.matchMedia('(width >= 64rem)');
+
+    // `data-float-lag` is how long this layer takes to catch up to the pointer.
+    // Leaving it at the 0.9s default keeps a layer in step with its neighbours;
+    // raising it makes that layer visibly trail the others. The gold mounts in
+    // Concept.astro use a longer lag on purpose, so each frame arrives a beat
+    // after the photograph it is behind — a frame that tracks its own picture
+    // perfectly is just a border, one that lags is a separate sheet.
+    const layers = plates.map((el) => {
+        const lag = parseFloat(el.dataset.floatLag ?? '0.9');
+        return {
+            el,
+            depth: parseFloat(el.dataset.floatDepth ?? '1'),
+            x: gsap.quickTo(el, 'x', { duration: lag, ease: 'power3' }),
+            y: gsap.quickTo(el, 'y', { duration: lag, ease: 'power3' }),
+        };
+    });
+
+    // Translation only — no rotation. A tilted plate has to fake perspective,
+    // and against a hard rectangular crop that reads as a card trick rather
+    // than as depth. Layers sliding at different rates give the same volume
+    // and stay honest to the flat, printed feel of the rest of the page.
+    const apply = (nx: number, ny: number) => {
+        for (const l of layers) {
+            l.x(nx * 24 * l.depth);
+            l.y(ny * 18 * l.depth);
+        }
+    };
+
+    // --- Scroll parallax ---------------------------------------------------
+    // Uses yPercent, while the pointer above uses y. They are separate parts of
+    // the same transform and compose cleanly, so the two effects never fight
+    // over one property. Runs at every width and on touch — it is scroll, not
+    // pointer, so there is nothing to gate.
+    for (const l of layers) {
+        gsap.fromTo(
+            l.el,
+            { yPercent: -3.5 * l.depth },
+            {
+                yPercent: 3.5 * l.depth,
+                ease: 'none',
+                scrollTrigger: { trigger: scene, start: 'top bottom', end: 'bottom top', scrub: true },
+            }
+        );
+    }
+
+    // --- The breath --------------------------------------------------------
+    // A slow zoom on the IMAGE inside each frame. The frame is overflow-hidden
+    // and never scales itself, so the cascade's overlaps stay exactly where
+    // they were laid out — only the picture moves within its window.
+    //
+    // Durations are deliberately unequal (17/21/19/23s). Matched durations
+    // would put all four in lockstep, which stops reading as four separate
+    // photographs breathing and starts reading as one animation.
+    const zooms = gsap.utils.toArray<HTMLElement>(scene.querySelectorAll('[data-float-zoom]'));
+    const spans = [17, 21, 19, 23];
+    zooms.forEach((el, i) => {
+        gsap.fromTo(
+            el,
+            { scale: 1 },
+            {
+                scale: 1.055,
+                duration: spans[i % spans.length],
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true,
+                force3D: true,
+                scrollTrigger: { trigger: scene, start: 'top bottom', end: 'bottom top', toggleActions: 'play pause resume pause' },
+            }
+        );
+    });
+
+    const onMove = (e: PointerEvent) => {
+        if (e.pointerType === 'touch') return;
+        const r = scene.getBoundingClientRect();
+        // Normalised to -1..1 from the centre of the scene.
+        apply((e.clientX - (r.left + r.width / 2)) / (r.width / 2), (e.clientY - (r.top + r.height / 2)) / (r.height / 2));
+    };
+
+    // Ease back to rest when the pointer leaves rather than freezing mid-tilt.
+    const onLeave = () => apply(0, 0);
+
+    let bound = false;
+    const sync = () => {
+        const on = fine.matches && desktop.matches;
+        if (on === bound) return;
+        if (on) {
+            scene.addEventListener('pointermove', onMove);
+            scene.addEventListener('pointerleave', onLeave);
+        } else {
+            scene.removeEventListener('pointermove', onMove);
+            scene.removeEventListener('pointerleave', onLeave);
+            // Clear the transforms outright — below lg the plates are a plain
+            // stacked column and must not be left holding a tilt from before
+            // the viewport was resized.
+            gsap.set(plates, { x: 0, y: 0 });
+        }
+        bound = on;
+    };
+
+    fine.addEventListener('change', sync);
+    desktop.addEventListener('change', sync);
+    sync();
 }
 
 /** The site-plan boundary draws itself, then the area figure counts up. */
@@ -374,6 +563,7 @@ function boot() {
     initParallax();
     initDraw();
     initCounters();
+    initFloat();
     initNav();
 
     // Tell the failsafe in Layout.astro that motion took over, so it stops

@@ -115,6 +115,14 @@ const ja: Dict = {
         // `images` strings above — those are long descriptive alt text, right
         // for a screen reader describing the picture, far too long for the
         // name of a button that selects it.
+        // One short line beside each plate on desktop. Kept to a single
+        // sentence: these sit in the white space of the cascade, and anything
+        // longer turns that breathing room into a second column of body copy.
+        notes: {
+            exterior: 'デッキは草地へと踏み出し、その背に木立が閉じる。',
+            bathroom: '石、湯、そしてガラス越しに迫る緑。',
+            bedroom: '目覚めれば、樹冠のなか。ほかには何も見えない。',
+        },
         plates: {
             aerial: '俯瞰',
             exterior: '外観',

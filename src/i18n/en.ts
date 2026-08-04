@@ -119,6 +119,14 @@ const en = {
         // `images` strings above — those are long descriptive alt text, right
         // for a screen reader describing the picture, far too long for the
         // name of a button that selects it.
+        // One short line beside each plate on desktop. Kept to a single
+        // sentence: these sit in the white space of the cascade, and anything
+        // longer turns that breathing room into a second column of body copy.
+        notes: {
+            exterior: 'The deck steps out into the meadow, and the trees close in behind it.',
+            bathroom: 'Stone, warm water, and the green pressing at the glass.',
+            bedroom: 'You wake into the canopy. Nothing else is in view.',
+        },
         plates: {
             aerial: 'Aerial view',
             exterior: 'Exterior',

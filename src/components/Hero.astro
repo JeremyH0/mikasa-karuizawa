@@ -60,28 +60,37 @@ const t = useTranslations(locale);
     >
     </div>
 
-    {/* NO top scrim. The plate is left completely clean, by decision.
+    {/* A very light top filter. This is a LOOK, not a legibility fix.
 
-        ⚠️ This is the one thing to understand before touching the header
-        colour here. The top-left of this image is sunlit haze, so the white
-        bar sits on near-white. Measured over the band the bar occupies:
+        At 0.30 it is barely perceptible as a band — it settles the brightest
+        haze at the top of the frame and gives the bar something to sit
+        against, which reads as depth rather than as a gradient laid over the
+        picture. That is the whole intent. Set it much heavier and it stops
+        being subtle and starts being a grey stripe across the photograph;
+        that version was built and rejected on sight.
 
-              top scrim α    wordmark   links
-              0.00 (now)       1.13       1.39
-              0.30             1.91       2.32
-              0.55             3.26       3.84
-              0.78             5.77       6.52   ← clears WCAG AA
+        ⚠️ Do not mistake this for a contrast solution. The top-left of the
+        plate is sunlit haze, so the white bar is sitting on near-white.
+        Measured over the band the bar actually occupies:
 
-        A scrim heavy enough to make white measure properly lays a visible
-        grey band across the top of the photograph, and on a page whose whole
-        job is to make the woodland look expensive that cost was judged higher
-        than the benefit. The picture wins here.
+              top α        wordmark   links
+              0.00           1.13       1.39
+              0.30 (now)     1.91       2.32
+              0.55           3.26       3.84
+              0.78           5.77       6.52   ← clears WCAG AA
 
-        So the header over the hero is NOT a measured-contrast design. It
-        holds together on the soft text-shadow in Navigation.astro and on the
-        fact that the haze, while bright, is low-detail and even. If WCAG AA
-        over the hero is ever required — an accessibility audit, a public
-        procurement rule — this is the knob, and 0.78 is the value. */}
+        So the header over the hero is deliberately not a measured-contrast
+        design. It holds on the soft text-shadow in Navigation.astro and on
+        the haze being bright but even and low-detail. If AA over the hero is
+        ever required — an accessibility audit, a procurement rule — this is
+        the knob, and 0.78 is the value that gets there. Anything in between
+        buys very little and costs the photograph. */}
+    <div
+        class="pointer-events-none absolute inset-x-0 top-0 h-72 md:h-80"
+        aria-hidden="true"
+        style="background: linear-gradient(to bottom, rgba(20,23,17,0.30) 0%, rgba(20,23,17,0.25) 18%, rgba(20,23,17,0.18) 38%, rgba(20,23,17,0.11) 58%, rgba(20,23,17,0.04) 78%, rgba(20,23,17,0) 100%);"
+    >
+    </div>
 
     {/* Colour sentinel — invisible, no layout, no paint.
 

@@ -2,12 +2,19 @@
 // Page 1 of the deck: the full-bleed forest plate with the headline ranged
 // left over it.
 //
-// The headline is split into lines HERE, in the dictionary, rather than by a
-// runtime text-splitter. Two reasons: the split survives with JS disabled, and
-// each language controls its own line breaks — the English breaks after
-// "estate" and "Japan's", but the Japanese and Chinese lines break at
-// completely different points and a character-count splitter would put them
-// in the wrong place.
+// The headline is ONE short line per language, not the three hand-broken ones
+// it used to be. The long version spelled out the whole proposition — woodland,
+// Japan, most prestigious villa destinations — over three lines, which read as
+// a paragraph laid over a photograph rather than as a title, and said in
+// sentences what the picture was already saying. What is left names the thing
+// being sold and stops.
+//
+// Because it is a single line there is nothing to hand-break, so the old
+// per-language line splitting is gone with it. If a headline ever needs a hard
+// break again, author it as separate dictionary keys and render one .line-mask
+// per line — do NOT add a runtime splitter, since the four languages break at
+// completely different points and a character-count split would put them in
+// the wrong place in at least three of them.
 import Figure from './Figure.astro';
 import { useTranslations, type Locale } from '../i18n';
 
@@ -17,20 +24,21 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-
-const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
 ---
 
-{/* No data-nav-dark on the section itself — the hero is not one tone.
+{/* The header is WHITE for the whole of this section.
 
-    Measured down the plate, the header band changes character as it scrolls:
-    the top is blown-out sky (dark text reads 8.6:1, white reads 1.0), the
-    lower two-thirds is dark forest (white reads 6.6–10.1, dark reads 1.0).
-    A single colour cannot serve both, which is why the earlier scrim existed.
+    It used to start dark over the sky and flip to white a third of the way
+    down, which was correct by measurement — the top of the plate is sunlit
+    haze where dark text reads 8.6:1 and white reads 1.0, and the lower two
+    thirds are forest where those numbers invert. No single colour serves both
+    on the raw image.
 
-    With the plate left clean, the header flips inside the hero instead: it
-    keeps the default dark ink over the sky, and the sentinel below switches
-    it to bone once forest fills the band. */}
+    It flipped mid-section anyway, while the visitor was still looking at the
+    first screen, and starting dark then going light read as a glitch rather
+    than as a response to the picture. One colour for the whole hero is the
+    call; the faint top scrim and the layered text-shadow below are what pay
+    for it. Both are annotated where they are set. */}
 <section id="top" class="relative h-[100svh] min-h-[38rem] w-full overflow-hidden bg-forest-deep">
     <Figure
         src="/images/hero-forest.jpg"
@@ -52,35 +60,41 @@ const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
     >
     </div>
 
-    {/* NO top scrim here, deliberately — the plate is left clean.
+    {/* NO top scrim. The plate is left completely clean, by decision.
 
-        Trade-off worth knowing if the header ever looks marginal on this
-        section: the sky is blown to near-white in places, so bone header text
-        measures ~1.0:1 there on the raw image. It stays readable only because
-        the `is-over-photo` state in Navigation.astro carries a two-pass text
-        shadow, which builds contrast around the glyph edges instead of
-        darkening the photograph.
+        ⚠️ This is the one thing to understand before touching the header
+        colour here. The top-left of this image is sunlit haze, so the white
+        bar sits on near-white. Measured over the band the bar occupies:
 
-        That is a perceptual fix, not a measured one — WCAG gives no credit
-        for text shadow. If AA compliance over the hero is ever required,
-        restore a ~64% top scrim over the first 11rem; that measured 5.0:1. */}
+              top scrim α    wordmark   links
+              0.00 (now)       1.13       1.39
+              0.30             1.91       2.32
+              0.55             3.26       3.84
+              0.78             5.77       6.52   ← clears WCAG AA
+
+        A scrim heavy enough to make white measure properly lays a visible
+        grey band across the top of the photograph, and on a page whose whole
+        job is to make the woodland look expensive that cost was judged higher
+        than the benefit. The picture wins here.
+
+        So the header over the hero is NOT a measured-contrast design. It
+        holds together on the soft text-shadow in Navigation.astro and on the
+        fact that the haze, while bright, is low-detail and even. If WCAG AA
+        over the hero is ever required — an accessibility audit, a public
+        procurement rule — this is the knob, and 0.78 is the value. */}
 
     {/* Colour sentinel — invisible, no layout, no paint.
 
-        Marks where the header band stops being sky and starts being forest,
-        so the bar switches from ink to bone at the right moment. 34% is just
-        past the horizon haze; measured, the band is decisively dark by ~45%
-        and decisively bright above ~15%.
-
-        Between roughly 23% and 40% the image is mid-tone and NEITHER colour
-        clears AA — that is inherent to a clean plate and is the cost of
-        having no scrim. The switch is placed inside that window so the
-        crossfade happens while contrast is weakest, which is also when the
-        text is moving fastest and least likely to be read. */}
+        Covers the ENTIRE hero, so the header is white from the first frame
+        rather than starting dark and flipping at 34%. That split existed
+        because the top of the plate was left clean and white could not hold
+        there; the scrim above removes the reason for it. One colour for the
+        whole section also means the bar no longer changes colour while the
+        visitor is reading the headline. */}
     <div
         data-nav-dark="photo"
         aria-hidden="true"
-        class="pointer-events-none absolute inset-x-0 bottom-0 top-[34%]"
+        class="pointer-events-none absolute inset-0"
     >
     </div>
 
@@ -102,35 +116,24 @@ const lines = [t.hero.headingLine1, t.hero.headingLine2, t.hero.headingLine3];
             <div>
                 <p data-hero class="eyebrow mb-7 text-brass">{t.hero.eyebrow}</p>
 
-                {/* Ceiling (2.6rem). Deliberately restrained, and two steps
-                    down from the 4.35rem this started at.
+                {/* One line, so it can be set larger again.
 
-                    At 4.35rem the longest line — line 3, 36 characters — could
-                    not fit the column at any desktop width, so the headline
-                    always broke into four lines with a long first line and two
-                    stubs under it. It filled the screen by brute force and read
-                    as oversized rather than as the composition the copy was
-                    written for.
+                    The ceiling came down to 2.6rem while this was three long
+                    lines — at any more than that the longest of them wrapped
+                    and the headline turned into a four-line block that covered
+                    the photograph. A single short line has no such limit: 3.4rem
+                    reads as a title rather than a caption and still occupies
+                    well under half the width, so the plate is never crowded.
 
-                    At 2.6rem all three authored lines hold on one line each
-                    from 1280px up, so the break pattern is the one that was
-                    written, and the headline sits as a quiet block against the
-                    photograph instead of covering it. The plate is the hero
-                    here; the words caption it. Anything above roughly 3.5rem
-                    starts wrapping line 3 again on a 1440 screen, which is the
-                    hard limit if this is ever retuned.
-
-                    Floor (1.62rem). The largest size at which line 1 still fits
-                    a 390px phone in one piece. Line 3 wraps at any phone width
-                    no matter what — `text-wrap: balance` in global.css is what
-                    keeps that wrap even instead of orphaning the last word. */}
+                    The floor stays 1.62rem, the largest size at which the
+                    English line holds in one piece on a 390px phone. Below
+                    that width it wraps, and `text-wrap: balance` in global.css
+                    keeps the break even rather than orphaning "estate". */}
                 <h1
                     data-hero-lines
-                    class="display max-w-[34ch] text-bone text-[clamp(1.62rem,4.2vw,2.6rem)]"
+                    class="display max-w-[34ch] text-bone text-[clamp(1.62rem,4.6vw,3.4rem)]"
                 >
-                    {lines.map((line) => (
-                        <span class="line-mask"><span>{line}</span></span>
-                    ))}
+                    <span class="line-mask"><span>{t.hero.heading}</span></span>
                 </h1>
             </div>
 

@@ -38,9 +38,7 @@ const en = {
 
     hero: {
         eyebrow: 'Old Karuizawa — 旧軽井沢',
-        headingLine1: 'A private woodland estate',
-        headingLine2: 'in one of Japan’s',
-        headingLine3: 'most prestigious villa destinations.',
+        heading: 'A private woodland estate.',
         scroll: 'Scroll',
         alt: 'Aerial view over the forested hills of Karuizawa at golden hour, with layered mountain ridges receding into warm haze.',
     },

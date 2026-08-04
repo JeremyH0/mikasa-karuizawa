@@ -39,9 +39,7 @@ const zhHant: Dict = {
 
     hero: {
         eyebrow: 'Old Karuizawa — 旧軽井沢',
-        headingLine1: '靜臥於日本最負盛名的',
-        headingLine2: '別墅勝地之一，',
-        headingLine3: '一處森林環抱的私邸用地。',
+        heading: '森林環抱的私邸用地。',
         scroll: '向下捲動',
         alt: '黃昏時分俯瞰輕井澤森林，層疊山巒在暖色薄霧中漸次遠去。',
     },

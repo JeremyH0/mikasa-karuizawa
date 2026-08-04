@@ -41,9 +41,7 @@ const ja: Dict = {
 
     hero: {
         eyebrow: 'Old Karuizawa — 旧軽井沢',
-        headingLine1: '日本有数の別荘地に佇む、',
-        headingLine2: '森に抱かれた',
-        headingLine3: 'プライベートな邸宅用地。',
+        heading: '森に抱かれた邸宅用地。',
         scroll: 'スクロール',
         alt: '黄金色の光に包まれた軽井沢の森を空から望む。幾重にも連なる山並みが霞の奥へと続いていく。',
     },

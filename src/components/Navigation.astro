@@ -246,10 +246,14 @@ const showLanguages = locales.length > 1;
     :global([data-nav].is-over-photo) .nav-ink {
         color: var(--color-bone);
         /* A single tight pass — enough to hold the glyph edges against
-           foliage, deliberately NOT the wide halo used before. That halo read
-           as a black smudge behind the text; this is invisible as a shadow.
-           The colour switch inside the hero does the real work now, so the
-           shadow only has to cover the dark forest, never blown-out sky. */
+           foliage, deliberately NOT a wide halo. A halo reads as a black
+           smudge behind the text, which is the same objection as a scrim,
+           just smaller; this is invisible as a shadow.
+
+           Heavier multi-pass versions were tried and removed. The plate is
+           shown clean and the header is left to sit on it — see the note on
+           the (absent) top scrim in Hero.astro for the measurements behind
+           that call. */
         text-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
     }
     :global([data-nav].is-over-photo) .nav-border {

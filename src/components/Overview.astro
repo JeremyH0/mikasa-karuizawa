@@ -41,7 +41,7 @@ const features = [
     be kept under the bar. The section's own top padding does that now. */}
 <section id="overview" data-nav-dark class="relative bg-forest py-24 md:py-32 lg:py-40">
     <div class="mx-auto max-w-shell px-6 md:px-10 lg:px-14">
-        <div data-float-scene class="grid gap-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:items-center lg:gap-20 xl:gap-28">
+        <div data-float-scene class="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-20 xl:gap-28">
         {/* The approach lane. Left column on desktop, BELOW the copy on
             everything smaller — see the ordering note on the copy block.
 
@@ -53,17 +53,30 @@ const features = [
             tall, and a large element travelling as far as a small one reads as
             the whole layout sliding rather than as a picture with weight.
 
-            The height is CAPPED below lg. This is a 3:4 portrait plate; left to
-            its own aspect ratio it renders 520px tall on a phone and over
-            1100px on a tablet, which turned one supporting photograph into a
-            full screen of scrolling.
+            The height is FIXED at every breakpoint, and the crop therefore
+            changes with the window: 0.76 portrait at 1440, squaring up as the
+            column widens. A 4:5 aspect-ratio version was built, which holds the
+            lane's vertical composition at any width — but it also grows the
+            plate past 1000px tall on a wide screen, and it was preferred this
+            way.
+
+            ⚠️ The consequence to know: past roughly 1700px the image column is
+            wider than 800px and this plate stops being portrait. The lane runs
+            away from the viewer, so it is a composition that wants height; if
+            it ever looks cropped on a very wide monitor, `lg:aspect-[4/5]`
+            with `h-auto` is the fix, paired with a max-width on the grid so the
+            plate cannot tower over the copy beside it.
+
+            Below lg the cap earns its place outright: full width and left to a
+            4:5 ratio, this renders over 1100px tall on a tablet — one
+            supporting photograph becoming a full screen of scrolling.
 
             data-parallax-img is gone — it did the fade-in AND its own vertical
             drift, which would fight the drift initFloat applies. The fade is
             not lost: the mount and the picture each carry the curtain wipe, the
             mount a fifth of a second behind. */}
         <div
-            class="relative order-2 h-[52svh] max-h-[30rem] min-h-[17rem] md:h-[46svh] md:max-h-[34rem] lg:order-1 lg:h-[42rem] lg:max-h-none"
+            class="relative order-2 h-[52svh] max-h-[30rem] min-h-[17rem] md:h-[46svh] md:max-h-[34rem] lg:order-1 lg:h-[46rem] lg:max-h-none xl:h-[50rem]"
         >
             <div
                 data-float
@@ -108,22 +121,35 @@ const features = [
             `order` only moves the visual box; the DOM order is unchanged, so
             the reading and tab order stay correct at every width. The desktop
             composition (image left, copy right) is restored at lg. */}
-        {/* The inner wrapper is CENTRED below lg and flush left at lg.
+        {/* ONE MEASURE for the whole copy stack — this is the balance fix.
 
-            At lg this copy is the right-hand column of a two-column spread, so
-            a 46ch measure ranged left against the photograph is correct. On a
-            tablet the same block is the full width of the page, and that same
-            measure left roughly 290px of empty green down the right-hand side
-            — the text read as though it had failed to fill the page rather
-            than as a set column. Centring the block turns that leftover width
-            into two even margins, which is what the eye expects. */}
+            The three blocks used to size themselves independently: the heading
+            filled the column at 673px, the body stopped at a 46ch measure
+            around 427px, and the feature list ran wider than both. Three
+            different right edges inside one column is what made this section
+            read as unbalanced — the eye looks for a column and finds a ragged
+            shape, and the leftover width reads as a hole rather than a margin.
+
+            34rem is now the measure for all of it: eyebrow, heading, rule, body
+            and features share one left edge AND one right edge. What is left of
+            the column past that is a clean margin, which is what the eye
+            expects to see beside a set column.
+
+            34rem (544px) is also a good measure in its own right — roughly
+            58 characters at this size, inside the comfortable band. The
+            `max-w-[46ch]` and `max-w-[18ch]` on the children still apply below
+            lg, where the block is the full width of the page and needs its own
+            constraint; at lg they defer to this wrapper.
+
+            Below lg the wrapper is centred instead, which turns the leftover
+            tablet width into two even margins. */}
         <div class="order-1 flex flex-col justify-center lg:order-2">
-            <div data-float data-float-depth="0.18" class="mx-auto w-full max-w-2xl lg:mx-0 lg:max-w-none">
+            <div data-float data-float-depth="0.18" class="mx-auto w-full max-w-2xl lg:mx-0 lg:max-w-[34rem]">
                 <p data-animate class="eyebrow text-brass">{t.overview.eyebrow}</p>
 
                 <h2
                     data-lines
-                    class="display mt-6 max-w-[18ch] text-bone text-[clamp(1.75rem,3.4vw,2.9rem)]"
+                    class="display mt-6 max-w-[18ch] text-bone text-[clamp(1.75rem,3.4vw,2.9rem)] lg:max-w-none"
                 >
                     <span class="line-mask"><span>{t.overview.heading}</span></span>
                 </h2>
@@ -139,7 +165,7 @@ const features = [
                 {/* Measure opens up slightly on tablet, where this paragraph is
                     the full width of the page rather than a column beside a
                     picture. */}
-                <div class="mt-10 max-w-[46ch] space-y-6 text-[0.95rem] leading-[1.85] text-bone/70 md:max-w-[56ch] lg:max-w-[46ch]">
+                <div class="mt-10 max-w-[46ch] space-y-6 text-[0.95rem] leading-[1.85] text-bone/70 md:max-w-[56ch] lg:max-w-none">
                     <p data-animate data-animate-delay="0.15">{t.overview.body1}</p>
                     <p data-animate data-animate-delay="0.22">{t.overview.body2}</p>
                 </div>

@@ -40,7 +40,7 @@ const ja: Dict = {
     },
 
     hero: {
-        eyebrow: 'Old Karuizawa — 旧軽井沢',
+        eyebrow: 'Old Karuizawa · 旧軽井沢',
         heading: '森に抱かれた邸宅用地。',
         scroll: 'スクロール',
         alt: '黄金色の光に包まれた軽井沢の森を空から望む。幾重にも連なる山並みが霞の奥へと続いていく。',
@@ -95,7 +95,7 @@ const ja: Dict = {
         },
         counter: { value: '2,926.84', unit: '㎡', sub: '878.6坪' },
         plan: {
-            caption: '敷地概念図 — 1369-11',
+            caption: '敷地概念図（1369-11）',
             parcel: '1369-11',
             north: '北',
             road: '道路',

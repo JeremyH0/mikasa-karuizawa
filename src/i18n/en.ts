@@ -12,7 +12,7 @@ const en = {
     meta: {
         title: 'Old Karuizawa · Mikasa | A Private Woodland Estate | Hirafu Capital GK',
         description:
-            'A 2,926.84 m² (878.6 tsubo) private woodland estate site in the exclusive Mikasa district of Old Karuizawa, Nagano — four minutes from Old Ginza Street.',
+            'A 2,926.84 m² (878.6 tsubo) private woodland estate site in the exclusive Mikasa district of Old Karuizawa, Nagano, four minutes from Old Ginza Street.',
     },
 
     nav: {
@@ -37,7 +37,7 @@ const en = {
     },
 
     hero: {
-        eyebrow: 'Old Karuizawa — 旧軽井沢',
+        eyebrow: 'Old Karuizawa · 旧軽井沢',
         heading: 'A private woodland estate.',
         scroll: 'Scroll',
         alt: 'Aerial view over the forested hills of Karuizawa at golden hour, with layered mountain ridges receding into warm haze.',
@@ -60,7 +60,7 @@ const en = {
     location: {
         eyebrow: 'Location Highlights',
         heading: 'Moments from the heart of Karuizawa.',
-        body: 'The site sits north of the town centre, where the residential grid dissolves into forest. Old Ginza Street, Karuizawa Station and the Shinkansen line to Tokyo all remain within easy reach — yet the estate itself is screened entirely by mature trees.',
+        body: 'The site sits north of the town centre, where the residential grid dissolves into forest. Old Ginza Street, Karuizawa Station and the Shinkansen line to Tokyo all remain within easy reach, yet the estate itself is screened entirely by mature trees.',
         mapAlt: 'Illustrated map of Karuizawa showing the site location north of Old Ginza Street and Karuizawa Station.',
         // Small print directly under the map panel, distinct from `note`
         // below (which qualifies the travel-time figures, not the map).
@@ -96,7 +96,7 @@ const en = {
         // Counter under the site plan. {n} is animated from 0 on scroll.
         counter: { value: '2,926.84', unit: 'm²', sub: '878.6 tsubo' },
         plan: {
-            caption: 'Indicative site plan — parcel 1369-11',
+            caption: 'Indicative site plan, parcel 1369-11',
             parcel: '1369-11',
             north: 'N',
             road: 'Road',
@@ -113,7 +113,7 @@ const en = {
     concept: {
         eyebrow: 'Development Concept',
         heading: 'A secluded estate embraced by nature.',
-        body: 'With a building coverage ratio of 30% and a floor area ratio of 50%, the parcel invites a single, generously proportioned residence set well back behind its own treeline — architecture that sits low in the landscape and lets the woodland remain the principal view from every room.',
+        body: 'With a building coverage ratio of 30% and a floor area ratio of 50%, the parcel invites a single, generously proportioned residence set well back behind its own treeline. The architecture sits low in the landscape and lets the woodland remain the principal view from every room.',
         note: 'Images are conceptual and illustrate one possible approach to the site. They do not represent an approved design, and no building is included in the sale.',
         // Short labels for the desktop plate switcher. Deliberately NOT the
         // `images` strings above — those are long descriptive alt text, right
@@ -159,7 +159,7 @@ const en = {
         // believing a message went through when it did not.
         // ⚠ PLACEHOLDER address — the real enquiry mailbox is not decided yet.
         // Update alongside public/inquiry.php and inquiry-config.sample.php.
-        error: 'Sorry — your message could not be sent. Please email us directly at info@mikasa-karuizawa.com.',
+        error: 'Sorry, your message could not be sent. Please email us directly at info@mikasa-karuizawa.com.',
         privacy:
             'Your details are used only to respond to this enquiry and are never shared with third parties.',
     },

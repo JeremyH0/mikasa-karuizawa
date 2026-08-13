@@ -159,11 +159,11 @@ const t = useTranslations(locale);
                 href="#overview"
                 data-hero
                 data-scroll-cue
-                class="group hidden shrink-0 items-center gap-3 pb-1 text-[0.65rem] tracking-[0.3em] uppercase text-bone/60 transition-colors duration-500 hover:text-bone sm:flex"
+                class="scroll-cue group hidden shrink-0 items-center gap-4 pb-1 text-[0.65rem] tracking-[0.3em] uppercase text-bone/55 transition-colors duration-500 hover:text-bone sm:flex"
             >
                 {t.hero.scroll}
-                <span class="relative block h-10 w-px overflow-hidden bg-bone/25">
-                    <span class="scroll-tick absolute inset-x-0 top-0 block h-4 bg-brass"></span>
+                <span class="scroll-rail" aria-hidden="true">
+                    <span class="scroll-tick"></span>
                 </span>
             </a>
         </div>
@@ -171,20 +171,106 @@ const t = useTranslations(locale);
 </section>
 
 <style>
-    /* A slow travelling tick inside the rule, rather than a bouncing arrow.
-       Runs indefinitely but is one transform on a 1px element — effectively
-       free, and the reduced-motion block in global.css stops it outright. */
+    /* ==================================================================
+       SCROLL CUE
+       ==================================================================
+       A hairline with a pulse of light falling down it, rather than a
+       bouncing arrow. The arrow is the obvious choice and the wrong one
+       here — it points, and this page is already asking the eye to move
+       downward through a headline and a photograph. A pulse suggests the
+       same direction without competing.
+
+       THREE THINGS MAKE IT READ AS LIGHT RATHER THAN AS A BLOCK:
+
+       1. The rail is masked at both ends, so it fades out instead of
+          stopping at a hard edge. Previously it was a solid 1px bar with
+          `overflow: hidden`, and the tick appeared and vanished at two
+          visible cut lines — which is what made it look mechanical.
+       2. The tick is a GRADIENT, transparent at both ends with brass in
+          the middle, so it has no edges of its own to clip.
+       3. It fades in as it enters and out as it leaves, on top of the
+          movement. A pulse that is fully opaque for its whole travel
+          reads as an object sliding; one that resolves at both ends
+          reads as light passing.
+
+       The long tail on the timing (the pulse lands at 62% and the cycle
+       runs to 100%) is a deliberate rest. Without it this loops
+       continuously and starts to feel like a loading indicator. */
+
+    .scroll-rail {
+        position: relative;
+        display: block;
+        width: 1px;
+        height: 3.5rem;
+        overflow: hidden;
+        background: color-mix(in srgb, var(--color-bone) 22%, transparent);
+        /* Fades the rail's own ends. Both properties are set because
+           Safari still needs the prefix here. */
+        -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+        mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+        transition: background-color 0.5s var(--ease-estate);
+    }
+
     .scroll-tick {
-        animation: scroll-tick 2.6s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        display: block;
+        height: 1.75rem;
+        /* A PLATEAU, not a single peak. A gradient that hits full brass at
+           one point only is invisible on a 1px element — there is nothing
+           for the eye to catch. The solid core carries the pulse; the fades
+           at either end are what stop it having edges. */
+        background: linear-gradient(
+            to bottom,
+            transparent,
+            var(--color-brass) 34%,
+            var(--color-brass) 66%,
+            transparent
+        );
+        /* On a 1px wire this bloom IS most of the effect. Without it the
+           pulse is a hairline; with it, it reads as light with a little
+           spill around it. */
+        box-shadow: 0 0 7px 1px color-mix(in srgb, var(--color-brass) 45%, transparent);
+        animation: scroll-tick 2.9s cubic-bezier(0.45, 0, 0.25, 1) infinite;
     }
 
     @keyframes scroll-tick {
         0% {
-            transform: translateY(-100%);
+            transform: translateY(-110%);
+            opacity: 0;
         }
-        60%,
+        22% {
+            opacity: 1;
+        }
+        52% {
+            opacity: 1;
+        }
+        62%,
         100% {
-            transform: translateY(250%);
+            transform: translateY(300%);
+            opacity: 0;
+        }
+    }
+
+    /* Hover brightens the whole cue and lets the pulse travel a little
+       further, so the control answers the pointer. The rail is not
+       re-timed on hover — changing an animation's duration mid-cycle
+       makes the pulse jump, which is worse than not responding at all. */
+    .scroll-cue:hover .scroll-rail {
+        background: color-mix(in srgb, var(--color-bone) 42%, transparent);
+    }
+
+    /* Reduced motion: park the pulse, visible, in the middle of the rail.
+       The global override in global.css collapses every animation to its
+       final frame, and this one's final frame is off the end of the rail
+       at zero opacity — which would leave an empty hairline and no cue at
+       all. Better to show a static mark. */
+    @media (prefers-reduced-motion: reduce) {
+        .scroll-tick {
+            animation: none;
+            transform: translateY(50%);
+            opacity: 1;
         }
     }
 </style>

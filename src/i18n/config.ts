@@ -19,19 +19,32 @@ export type Locale = (typeof allLocales)[number];
 /**
  * The locales that are actually built, linked, and indexed. ← THE ONE SWITCH.
  *
- *   English-only launch:  export const locales: readonly Locale[] = ['en'];
- *   Full four-language:   export const locales: readonly Locale[] = allLocales;
+ *   English only:         export const locales: readonly Locale[] = ['en'];
+ *   English + Japanese:   export const locales: readonly Locale[] = ['en', 'ja'];
+ *   All four:             export const locales: readonly Locale[] = allLocales;
  *
  * Everything downstream reads this array and nothing else — getStaticPaths,
- * the sitemap, the hreflang alternates, and the language switcher. Flipping
- * this line adds or removes three languages across the whole site at once.
+ * the sitemap, the hreflang alternates, the header switcher, the footer and
+ * the first-visit language prompt. Flipping this line adds or removes whole
+ * languages across the site at once.
  *
- * The ja / zh-Hans / zh-Hant dictionaries stay on disk either way. They are
- * simply not rendered, so an English-only build ships no half-translated page
- * and no hreflang pointing at a URL that does not exist. Freeze the English
- * copy first, then flip this back to `allLocales`.
+ * The unbuilt dictionaries STAY ON DISK and stay type-checked. They are simply
+ * not rendered, so a reduced build ships no half-translated page, no switcher
+ * entry pointing at a 404, and no hreflang for a URL that does not exist.
+ *
+ * ── Currently EN + JA. The two Chinese dictionaries are complete and are held
+ * back only because they have not had a native review; zh-Hans also has a
+ * market-specific constraint (nothing may load from Google — see global.css)
+ * that is worth re-verifying before it goes out. Add them back by putting
+ * 'zh-Hans' and 'zh-Hant' into the array below, or by switching it to
+ * `allLocales`. Nothing else needs to change.
+ *
+ * ⚠️ If /zh/ or /zh-hant/ have already been crawled at the time they are
+ * removed, they will start returning 404. That is correct behaviour rather
+ * than a bug, but on a live indexed domain it is worth a redirect to the
+ * English page instead of a bare 404.
  */
-export const locales: readonly Locale[] = allLocales;
+export const locales: readonly Locale[] = ['en', 'ja'];
 
 export const defaultLocale: Locale = 'en';
 

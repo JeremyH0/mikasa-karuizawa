@@ -262,7 +262,17 @@ linked, indexed and prompted. `en.ts` is the **type source** (`Dict`); adding a
 key there makes `astro check` fail until all four dictionaries have it. That is
 the intended workflow, not an obstacle.
 
-Currently all four locales are built.
+**Currently EN + JA.** The Chinese dictionaries are complete, still type-checked
+and simply not rendered. Switching a locale on or off is that one array and
+nothing else: routes, sitemap, hreflang, `og:locale:alternate`, the header
+switcher, the footer, the mobile menu and the first-visit prompt all read it.
+
+The prompt is worth understanding before touching it. It maps the browser's
+language to an internal locale and then looks that locale up in the BUILT list —
+so a zh-CN visitor to an EN+JA build is offered nothing, rather than a link to a
+page that no longer exists. The browser-language lookup table still ships for
+every locale the codebase knows about; that is a few hundred bytes and it is
+what keeps re-enabling a language a one-line change.
 
 ---
 

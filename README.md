@@ -28,7 +28,7 @@ Requires Node ≥ 22.12.
 
 | | |
 |---|---|
-| **Languages built** | All four — `en` · `ja` · `zh-Hans` · `zh-Hant` |
+| **Languages built** | English + Japanese. The two Chinese dictionaries are complete but held back pending a native review — one line in `src/i18n/config.ts` |
 | **Photography** | All 8 slots filled from the deck. The hero is built from an upscaled plate; the three interior renders are still 678 px originals and are the weakest assets on the page — see [`public/images/ASSETS.md`](public/images/ASSETS.md) |
 | **Enquiry form** | ⚠️ Wired end to end, but **no recipient mailbox is set**, and it needs PHP — see *Deploy* |
 | **Domain** | ⚠️ Placeholder (`mikasa-karuizawa.com`) in `astro.config.mjs` and `public/robots.txt` |
@@ -43,23 +43,33 @@ of which the hero is 545 KB. No third-party requests of any kind.
 ## Languages
 
 Four dictionaries exist and are complete: `en`, `ja`, `zh-Hans`, `zh-Hant`.
-**All four are currently built.**
+**English and Japanese are currently built.**
 
 The switch is one line — `src/i18n/config.ts`:
 
 ```ts
-export const locales: readonly Locale[] = allLocales;    // now — all four
-export const locales: readonly Locale[] = ['en'];        // English-only launch
+export const locales: readonly Locale[] = ['en', 'ja'];  // now
+export const locales: readonly Locale[] = allLocales;    // add Chinese back
+export const locales: readonly Locale[] = ['en'];        // English only
 ```
 
-The `ja` / `zh-Hans` / `zh-Hant` files are marked in their own headers as
-drafts that have not had a native review. That review is still outstanding.
+The unbuilt dictionaries stay on disk and stay type-checked, so they cannot rot
+while they are switched off — adding a key to `en.ts` still fails the build
+until all four have it.
+
+⚠️ The `ja`, `zh-Hans` and `zh-Hant` files are marked in their own headers as
+drafts that have **not had a native review**. Japanese is live in that state;
+getting it reviewed is the most immediate outstanding content task.
+
+⚠️ Removing a locale makes its URLs 404. That is correct rather than a bug, but
+if `/zh/` or `/zh-hant/` have already been crawled on a live domain, redirect
+them to the English page instead of serving a bare 404.
 
 Everything downstream reads that array and nothing else: route generation, the
-sitemap, hreflang alternates, the header switcher, the footer, and the
-first-visit language suggestion. Flipping it adds or removes three languages
-across the whole site at once, and an English-only build ships **no** stale
-hreflang, **no** switcher, and none of the language-prompt JS.
+sitemap, hreflang alternates, `og:locale:alternate`, the header switcher, the
+footer, the mobile menu and the first-visit language suggestion. A reduced build
+ships **no** stale hreflang and **no** switcher entry pointing at a page that
+was not generated; a single-locale build drops the prompt and its JS entirely.
 
 | Locale | URL |
 |---|---|
@@ -122,11 +132,21 @@ the animation vocabulary lives in one place.
 | `data-hero-lines` / `data-lines` | Masked line-by-line reveal |
 | `data-animate` | Scroll-triggered fade + rise (`data-animate-delay` in seconds) |
 | `data-reveal-img` | Clip-path curtain wipe |
-| `data-parallax-img` | Vertical drift (`data-parallax-depth`, % of height) |
-| `data-hero-img` | Slow push-in, then parallax on scroll |
+| `data-reveal-delay` | Delays that wipe, so one can trail another (the gold mounts) |
+| `data-parallax-img` | Vertical drift (`data-parallax-depth`, % of height) — no current callers; superseded by `data-float` |
+| `data-hero-img` | Slow push-in, then a very slow breath, plus scroll parallax |
+| `data-float-scene` | Container whose pointer position drives the floats inside it |
+| `data-float` | Drifts toward the pointer and on scroll (`data-float-depth`, `data-float-lag`) |
+| `data-float-zoom` | Image that breathes slowly inside a fixed frame |
 | `data-draw` | SVG path draws itself (needs `pathLength="1"`) |
 | `data-count` | Number counts up, locale-formatted |
 | `data-nav-dark` | Marks a dark section so the header flips to light text |
+
+The float primitives are **desktop and real-pointer only** for the pointer half;
+scroll drift and the breath run everywhere. Section headings float too, at about
+a tenth of the strength of the images — body copy, tables and form fields
+deliberately do not, because text that shifts while you read it is a
+readability problem rather than an effect.
 
 **Headline line breaks are authored in the dictionaries, not split at runtime.**
 Each language breaks at completely different points, and a character-count

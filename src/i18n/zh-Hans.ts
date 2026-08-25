@@ -66,6 +66,13 @@ const zhHans: Dict = {
         body: '用地位于市镇中心以北，住宅街区渐次隐入森林之处。旧轻银座大街、轻井泽车站以及通往东京的新干线均近在咫尺，而用地本身则被成熟林木完全遮蔽。',
         mapAlt: '轻井泽地图，标示用地位于旧轻银座大街与轻井泽车站以北。',
         mapCaption: '此图为示意图，非按实际比例绘制。',
+        // Two labels drawn ON the map. The deck's artwork already names Old
+        // Ginza Street and marks the site with a star; these add the star's
+        // name and the station, which the artwork leaves unlabelled.
+        mapLabels: {
+            site: '用地位置',
+            station: '轻井泽车站',
+        },
         note: '所需时间为大致估算，除另有注明外均为驾车时间。',
         times: {
             ginza: { label: '旧轻银座大街', value: '4 分钟' },

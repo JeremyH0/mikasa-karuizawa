@@ -66,6 +66,13 @@ const ja: Dict = {
         body: '敷地は市街地の北側、住宅地が森へと溶け込んでいくあたりに位置します。旧軽銀座、軽井沢駅、そして東京へと向かう新幹線。そのいずれもが手の届く距離にありながら、敷地そのものは深い木立にすっかりと守られています。',
         mapAlt: '軽井沢の地図。旧軽銀座と軽井沢駅の北側に敷地の位置を示す。',
         mapCaption: 'イメージ図であり、縮尺は正確ではありません。',
+        // Two labels drawn ON the map. The deck's artwork already names Old
+        // Ginza Street and marks the site with a star; these add the star's
+        // name and the station, which the artwork leaves unlabelled.
+        mapLabels: {
+            site: '敷地',
+            station: '軽井沢駅',
+        },
         note: '所要時間は目安です。特に記載のない場合はお車での時間となります。',
         times: {
             ginza: { label: '旧軽銀座', value: '4分' },

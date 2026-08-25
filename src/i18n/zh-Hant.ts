@@ -64,6 +64,13 @@ const zhHant: Dict = {
         body: '基地位於市鎮中心以北，住宅街區漸次隱入森林之處。舊輕銀座大街、輕井澤車站以及通往東京的新幹線皆近在咫尺，而基地本身則為成熟林木完全遮蔽。',
         mapAlt: '輕井澤地圖，標示基地位於舊輕銀座大街與輕井澤車站以北。',
         mapCaption: '此圖為示意圖，非按實際比例繪製。',
+        // Two labels drawn ON the map. The deck's artwork already names Old
+        // Ginza Street and marks the site with a star; these add the star's
+        // name and the station, which the artwork leaves unlabelled.
+        mapLabels: {
+            site: '基地位置',
+            station: '輕井澤車站',
+        },
         note: '所需時間為約略估算，除另有註明外均為車程。',
         times: {
             ginza: { label: '舊輕銀座大街', value: '4 分鐘' },

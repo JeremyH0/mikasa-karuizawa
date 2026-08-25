@@ -147,6 +147,51 @@ const times = [
                             class="w-full"
                             imgClass="h-full w-full object-cover"
                         />
+
+                        {/* Two labels set ON the artwork, in the artwork's own
+                            hand: serif caps, same size, same restraint. Text
+                            only, no icons — the deck pairs its own label with a
+                            shop glyph, but two more marks on a map this small
+                            crowds it, and neither of these needs a symbol to be
+                            understood.
+
+                            ── The coordinates are percentages of the VISIBLE
+                            BOX, not of the image file, and the two differ.
+                            The plate is a 4:3 window onto a 3:2 image, so
+                            object-cover trims about 6.5% off each side. The
+                            star measures at 37.5% / 21.9% of the box; that
+                            figure is stable at every width because the crop
+                            ratio never changes, but it will be wrong the moment
+                            the declared 1600x1200 or the map file changes.
+                            Re-measure if either does.
+
+                            ── Karuizawa Station sits just above the rail line
+                            it names, and to the right of the route-18 shield.
+                            Both of those are deliberate. The artwork does not
+                            mark the station, so this is positioned from the
+                            geography rather than copied from a symbol, and the
+                            plate is captioned "not to scale" right beneath it.
+
+                            Directly ON the line, at 94.5%, the chip covered the
+                            18 shield and left 3px of clearance at the bottom of
+                            the plate on a phone. Nudged up and right it clears
+                            both and still reads as belonging to the line.
+
+                            ── Both labels open to the RIGHT from a left anchor
+                            and both start left of centre, so the text grows
+                            into the map rather than towards an edge. That is
+                            what stops this repeating the original bug, where
+                            nowrap labels at percentage coordinates ran off the
+                            side of a narrow map. */}
+                        <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+                            <span class="map-label" style="left:40.5%; top:21.9%">
+                                {t.location.mapLabels.site}
+                            </span>
+
+                            <span class="map-label" style="left:55%; top:90.5%">
+                                {t.location.mapLabels.station}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -158,3 +203,50 @@ const times = [
         </div>
     </div>
 </section>
+
+<style>
+    /* A small dark chip rather than text sitting directly on the artwork.
+
+       The first version matched the deck's own "OLD GINZA STREET" mark — dark
+       green caps with a white halo, drawn to look printed into the map. It
+       reads beautifully across the flat cream of the town, and it thins out the
+       moment a label crosses the tree wash or a pale road, because a hairline
+       serif at this size has very little glyph mass to hold an edge with.
+
+       The chip solves that outright: the text now brings its own background, so
+       its legibility no longer depends on what is underneath it. The trade is
+       that these two read as applied to the map rather than drawn into it,
+       which is the honest description of what they are — the artwork does not
+       label the station, so this was never going to be indistinguishable from
+       it anyway.
+
+       Kept deliberately restrained: no blur, no border, a small radius, and an
+       opacity low enough that the map still shows through. */
+    .map-label {
+        position: absolute;
+        display: block;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        padding: 0.2rem 0.44rem;
+        border-radius: 2px;
+        background: rgb(32 36 28 / 0.62);
+        font-family: var(--font-serif);
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-bone);
+        /* Lifts the chip off the map rather than lighting the glyphs — the
+           background is doing the legibility work now. */
+        box-shadow: 0 2px 8px rgb(20 23 17 / 0.28);
+    }
+
+
+
+    @media (width >= 40rem) {
+        .map-label { font-size: 0.7rem; padding: 0.26rem 0.56rem; }
+    }
+
+    @media (width >= 64rem) {
+        .map-label { font-size: 0.8rem; padding: 0.3rem 0.62rem; }
+    }
+</style>

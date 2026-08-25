@@ -65,6 +65,13 @@ const en = {
         // Small print directly under the map panel, distinct from `note`
         // below (which qualifies the travel-time figures, not the map).
         mapCaption: 'Illustrative map, not to scale.',
+        // Two labels drawn ON the map. The deck's artwork already names Old
+        // Ginza Street and marks the site with a star; these add the star's
+        // name and the station, which the artwork leaves unlabelled.
+        mapLabels: {
+            site: 'Site location',
+            station: 'Karuizawa Station',
+        },
         // `note` is the small print under the travel-time list.
         note: 'Travel times are approximate and by car unless stated otherwise.',
         times: {

@@ -65,11 +65,6 @@ const en = {
         // Small print directly under the map panel, distinct from `note`
         // below (which qualifies the travel-time figures, not the map).
         mapCaption: 'Illustrative map, not to scale.',
-        pins: {
-            site: 'Site location',
-            ginza: 'Old Ginza Street',
-            station: 'Karuizawa Station',
-        },
         // `note` is the small print under the travel-time list.
         note: 'Travel times are approximate and by car unless stated otherwise.',
         times: {

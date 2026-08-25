@@ -1,28 +1,37 @@
 ---
-// Page 2: the illustrated Karuizawa map with its three labelled points.
+// Page 2: the illustrated Karuizawa map from the deck, shown as delivered.
 //
-// REDESIGNED from inline text pills to NUMBERED MARKERS.
+// NOTHING IS DRAWN ON TOP OF IT, and that is the point. Read this before
+// adding a marker.
 //
-// The previous version anchored `whitespace-nowrap` text labels — "Karuizawa
-// Station", or the equivalent in three other scripts — at percentage
-// coordinates with no boundary clamping. On a narrow map (any phone, or the
-// mobile stacked layout) that label routinely ran past the image edge, and
-// on any screen it competed with the map artwork instead of sitting on it
-// cleanly. There was no way to fix that by tuning numbers; the mechanism was
-// wrong at any width.
+// The artwork already labels itself. It carries a gold star in a white disc on
+// the site, "OLD GINZA STREET" set in small caps beside its own shop icon,
+// route shields for 133 and 18, the Shinkansen line, and a compass rose in the
+// top-right corner. It was drawn as a finished piece of marketing material and
+// it does not need help.
 //
-// A numbered badge is a fixed, small, language-independent shape — a digit in
-// a circle never overflows, at any viewport, in any of the four locales. The
-// legend beneath the map and the travel-time list beside it are what carry
-// the actual place names, cross-referenced to the map by the same numbers.
-// This is the standard device for a site-context map in a property brochure,
-// and it is also just more robust engineering: the one part that has to work
-// at every width is now geometrically incapable of breaking.
+// Two overlays were built over it and both are now gone:
 //
-// The map is presented as a framed plate (bordered panel, caption line, a
-// corner compass mark) rather than a bare photo, echoing how the survey
-// drawing is presented in Land.astro — the two "technical drawing" moments on
-// the page now share one visual language.
+//   1. Inline text pills at percentage coordinates. `whitespace-nowrap` labels
+//      with no boundary clamping, which ran off the edge of a narrow map in
+//      every locale. Broken at any width.
+//   2. Numbered badges (1/2/3) with a legend underneath and matching digits in
+//      the travel-time list. Geometrically robust, and confusing: a reader had
+//      to map a digit to a legend entry to a place, while the artwork was
+//      already naming two of those places directly underneath. Two labelling
+//      systems arguing over one picture.
+//
+// The compass overlay went with them for the same reason — the deck's own rose
+// is right there in the corner, and we were drawing a second one on top of it.
+//
+// Karuizawa Station is the one place named in the travel list that the artwork
+// does not label. That is fine: the list is a list, and it does not need a pin
+// to be legible. `t.location.mapAlt` carries the full description for anyone
+// who cannot see the image.
+//
+// The map keeps its framed presentation — bone mat, gold hairline, caption —
+// which is shared with the survey drawing in Land.astro so the two technical
+// plates on the page read as one family.
 import Figure from './Figure.astro';
 import { useTranslations, type Locale } from '../i18n';
 
@@ -33,23 +42,12 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 
-// Coordinates are percentages over the image, matching the deck's artwork.
-// If the map is ever re-cropped, these three pairs are the only thing to
-// re-tune — see the same note kept on the pins themselves below.
-const pins = [
-    { n: 1, label: t.location.pins.site, x: 30, y: 22, primary: true },
-    { n: 2, label: t.location.pins.ginza, x: 57, y: 62, primary: false },
-    { n: 3, label: t.location.pins.station, x: 63, y: 86, primary: false },
-];
-
-// Travel times. Only ginza/station carry a map number — Tokyo and Haneda are
-// off the illustration, so badging them would promise a pin that isn't there.
 const times = [
-    { ...t.location.times.ginza, n: 2 },
-    { ...t.location.times.station, n: 3 },
-    { ...t.location.times.tokyo, n: undefined },
-    { ...t.location.times.haneda, n: undefined },
-] as Array<{ label: string; value: string; via?: string; n?: number }>;
+    t.location.times.ginza,
+    t.location.times.station,
+    t.location.times.tokyo,
+    t.location.times.haneda,
+] as Array<{ label: string; value: string; via?: string }>;
 ---
 
 <section id="location" class="bg-bone-dim/60 py-24 md:py-32 lg:py-40">
@@ -80,18 +78,7 @@ const times = [
                             data-animate-delay={String(0.2 + i * 0.06)}
                             class="flex items-baseline justify-between gap-6 border-b border-ink/12 py-5"
                         >
-                            <dt class="flex items-baseline gap-3 text-[0.9rem] text-ink/75">
-                                {/* Same numbered badge as the map pin it
-                                    corresponds to — this is the cross-
-                                    reference, not decoration. */}
-                                {item.n && (
-                                    <span
-                                        aria-hidden="true"
-                                        class="flex h-5 w-5 shrink-0 translate-y-0.5 items-center justify-center rounded-full border border-brass/50 text-[0.65rem] font-medium text-brass-dim"
-                                    >
-                                        {item.n}
-                                    </span>
-                                )}
+                            <dt class="text-[0.9rem] text-ink/75">
                                 <span>
                                     {item.label}
                                     {item.via && (
@@ -135,6 +122,21 @@ const times = [
                 >
                 </div>
                 <div class="relative bg-bone p-3 shadow-[0_30px_60px_-30px_rgba(38,38,31,0.35)] sm:p-4">
+                    {/* The declared size below is deliberately NOT the file's
+                        real one. The image is 1761x1169 (3:2); this declares
+                        4:3, and since Figure turns width/height into the
+                        aspect-ratio it reserves, object-cover crops the sides
+                        to fit.
+
+                        That crop is wanted. It trims the empty forest margins
+                        and brings the star and Old Ginza Street closer
+                        together, which is what makes the map read at the size
+                        it is shown here. The cost is the deck's compass rose in
+                        the top-right corner, which is cropped off — checked,
+                        and accepted.
+
+                        Restoring the true 1761x1169 shows the whole artwork
+                        including the rose, if that is ever preferred. */}
                     <div class="relative overflow-hidden">
                         <Figure
                             src="/images/location-map.jpg"
@@ -145,69 +147,6 @@ const times = [
                             class="w-full"
                             imgClass="h-full w-full object-cover"
                         />
-
-                        {/* Compass mark — echoes the deck's own map artwork,
-                            which carries the same device in its corner. Purely
-                            decorative: the map already has a real orientation,
-                            this just makes the plate read as a drawing rather
-                            than a cropped screenshot. */}
-                        <div
-                            aria-hidden="true"
-                            class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-bone/70 bg-forest-deep/55 backdrop-blur-sm sm:right-4 sm:top-4"
-                        >
-                            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-bone">
-                                <path d="M12 2 9.4 11 12 22 14.6 11Z" opacity="0.55" />
-                                <path d="M12 4.2 10.4 11 12 17.5 13.6 11Z" />
-                            </svg>
-                        </div>
-
-                        {/* Pin overlay. aria-hidden because every label is
-                            already in the map's alt text and the travel-time
-                            list — a screen reader announcing the numbers
-                            again adds nothing. */}
-                        <div class="absolute inset-0" aria-hidden="true">
-                            {pins.map((pin, i) => (
-                                <div
-                                    class="pin absolute flex items-center justify-center"
-                                    style={`left:${pin.x}%; top:${pin.y}%; --pin-delay:${0.4 + i * 0.18}s`}
-                                >
-                                    <span
-                                        class:list={[
-                                            'pin-mark relative flex items-center justify-center rounded-full font-serif shadow-[0_6px_18px_-4px_rgba(20,23,17,0.55)]',
-                                            pin.primary
-                                                ? 'h-8 w-8 border-2 border-brass bg-forest-deep text-sm text-bone sm:h-9 sm:w-9'
-                                                : 'h-6 w-6 border border-bone/70 bg-forest text-[0.7rem] text-bone/95 sm:h-7 sm:w-7',
-                                        ]}
-                                    >
-                                        {pin.n}
-                                        {pin.primary && <span class="pin-pulse absolute inset-0 rounded-full border border-brass"></span>}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Legend — ties the map's numbers to the place names,
-                        which is what used to sit unclamped on the image
-                        itself. Wraps freely at any width because it is a
-                        normal text row, not an absolutely-positioned label. */}
-                    <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 px-1 pt-3 sm:mt-4 sm:pt-4">
-                        {pins.map((pin) => (
-                            <div class="flex items-center gap-2.5">
-                                <span
-                                    aria-hidden="true"
-                                    class:list={[
-                                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-serif',
-                                        pin.primary
-                                            ? 'border-2 border-brass bg-forest-deep text-bone'
-                                            : 'border border-ink/25 text-ink/70',
-                                    ]}
-                                >
-                                    {pin.n}
-                                </span>
-                                <span class="text-[0.78rem] tracking-[0.02em] text-ink/75">{pin.label}</span>
-                            </div>
-                        ))}
                     </div>
                 </div>
                 </div>
@@ -219,55 +158,3 @@ const times = [
         </div>
     </div>
 </section>
-
-<style>
-    /* Pins drop in on a stagger driven by the inline --pin-delay. Kept in CSS
-       rather than GSAP because they are purely decorative and should not cost
-       a ScrollTrigger each. Centred on their coordinate now (-50%/-50%), not
-       offset, because a numbered badge — unlike the old left-anchored label —
-       has no directional "tail" that needs the anchor pulled left. */
-    .pin {
-        transform: translate(-50%, -50%);
-        opacity: 0;
-        animation: pin-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        animation-delay: var(--pin-delay, 0s);
-    }
-
-    @keyframes pin-in {
-        from {
-            opacity: 0;
-            transform: translate(-50%, calc(-50% - 10px));
-        }
-        to {
-            opacity: 1;
-            transform: translate(-50%, -50%);
-        }
-    }
-
-    .pin-pulse {
-        animation: pin-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    @keyframes pin-pulse {
-        0% {
-            transform: scale(1);
-            opacity: 0.8;
-        }
-        70%,
-        100% {
-            transform: scale(1.9);
-            opacity: 0;
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .pin {
-            opacity: 1;
-            animation: none;
-        }
-        .pin-pulse {
-            animation: none;
-            opacity: 0;
-        }
-    }
-</style>

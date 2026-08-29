@@ -61,7 +61,18 @@ const ogAlternateLocales = locales.filter((l) => l !== locale).map((l) => ogLoca
         <meta charset="UTF-8" />
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Three icons, and each covers something the others do not.
+            The SVG is the one modern browsers use and the only one that stays
+            sharp at any size. The 32px PNG is the fallback for anything that
+            will not take an SVG. The 180px Apple icon is what iOS uses for
+            "Add to Home Screen" — it refuses SVG outright, and without this an
+            agent who saves the listing to their phone gets a blank tile.
+            All three are generated from the same vector by `npm run images`. */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        {/* Bone on the light pages this matches; the browser chrome on Android
+            picks it up around the address bar. */}
         <meta name="theme-color" content="#F2F1EC" />
         {/* Astro.generator is deliberately omitted — it publishes the exact
             framework version for anyone probing for known CVEs. */}

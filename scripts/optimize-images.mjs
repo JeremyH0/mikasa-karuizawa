@@ -57,6 +57,19 @@ const JOBS = [
     { in: 'mikasa-photo-03.png', out: 'approach-lane.jpg', width: 1800, format: 'jpeg', quality: 84 },
     { in: 'mikasa-photo-04.png', out: 'site-survey.png', width: 2000, format: 'palette', colours: 128 },
 
+    // --- Social share card -------------------------------------------------
+    // 1200x630 because that is the ratio every platform crops to. Handing them
+    // the raw hero (2560x1700, a 1.5:1 frame) meant each one cropped it
+    // differently and none of them the way we would: Facebook and LinkedIn take
+    // a 1.91:1 band, so the sky and the foreground both went. Cropping it here
+    // means the frame that gets shared is the frame we chose.
+    //
+    // Size matters as much as shape. The hero is 545 KB, and several of the
+    // messengers this listing will actually travel through — LINE and WeChat
+    // above all — are unreliable about fetching a preview that large over a
+    // mobile connection. This lands around a tenth of it.
+    { in: 'mikasa-hero-upscaled.png', out: 'og-cover.jpg', width: 1200, height: 630, format: 'jpeg', quality: 82 },
+
     // --- Deck p.4 concept renders ------------------------------------------
     // The single-storey pavilion scheme. This is the design the site shows.
     { in: 'mikasa-photo-05.png', out: 'villa-aerial.jpg', width: 2560, format: 'jpeg', quality: 84 },
@@ -72,6 +85,43 @@ const JOBS = [
 ];
 
 const kb = (bytes) => `${(bytes / 1024).toFixed(0)} KB`;
+
+/**
+ * Raster icons, rendered from public/favicon.svg.
+ *
+ * The SVG alone is not enough. It is the best favicon a modern browser can
+ * have — one file, sharp at any size — but Safari's pinned tabs, older Android
+ * browsers and, most importantly, the iOS "Add to Home Screen" flow all want a
+ * PNG, and iOS will not take an SVG at all. An agent who saves this listing to
+ * a phone home screen currently gets a blank tile.
+ *
+ * 180px is the size iOS asks for and downscales from. 32px is the classic
+ * favicon slot. Both are drawn from the vector, so they stay in step with it.
+ */
+const ICONS = [
+    { size: 32, out: 'favicon-32.png' },
+    { size: 180, out: 'apple-touch-icon.png' },
+];
+
+async function buildIcons() {
+    const src = path.join(ROOT, 'public/favicon.svg');
+    if (!existsSync(src)) {
+        console.warn('  skip   icons                      (no public/favicon.svg)');
+        return;
+    }
+    for (const icon of ICONS) {
+        const outPath = path.join(ROOT, 'public', icon.out);
+        // density lifts the rasteriser's sampling rate before it draws, so the
+        // 1.35px strokes in the mark stay clean at 180px instead of being
+        // rendered at 32 and scaled up.
+        await sharp(src, { density: 384 })
+            .resize(icon.size, icon.size)
+            .png({ compressionLevel: 9 })
+            .toFile(outPath);
+        const after = (await stat(outPath)).size;
+        console.log(`  ok     ${icon.out.padEnd(26)} ${String(icon.size).padStart(4)}×${String(icon.size).padEnd(4)}  ${kb(after).padStart(19)}`);
+    }
+}
 
 async function run() {
     if (!existsSync(SRC)) {
@@ -98,13 +148,27 @@ async function run() {
         const image = sharp(inPath, { limitInputPixels: false });
         const meta = await image.metadata();
 
-        // withoutEnlargement keeps a small original at its native size instead
-        // of inventing pixels that were never captured.
-        let pipeline = image.resize({
-            width: job.width,
-            withoutEnlargement: true,
-            fit: 'inside',
-        });
+        // Two sizing modes.
+        //
+        // Default: `width` is a MAXIMUM and the aspect ratio is kept, with
+        // withoutEnlargement so a small original stays at its native size
+        // instead of having pixels invented for it.
+        //
+        // `job.height`: an exact box, cropped to fill. Only the share image
+        // uses this, because a social card has a ratio the platforms enforce
+        // and being the right shape matters more than keeping the original's.
+        let pipeline = job.height
+            ? image.resize({
+                  width: job.width,
+                  height: job.height,
+                  fit: 'cover',
+                  position: job.position ?? 'centre',
+              })
+            : image.resize({
+                  width: job.width,
+                  withoutEnlargement: true,
+                  fit: 'inside',
+              });
 
         if (job.format === 'jpeg') {
             // mozjpeg buys roughly 10% at identical visual quality.
@@ -134,6 +198,8 @@ async function run() {
                 `${kb(before).padStart(8)} → ${kb(after).padStart(8)}${note}`
         );
     }
+
+    await buildIcons();
 
     console.log(
         `\n  ${JOBS.length - missing}/${JOBS.length} written  ${kb(totalIn)} → ${kb(totalOut)} ` +

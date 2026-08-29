@@ -277,6 +277,10 @@ in `public/images/` ships an 8 MB PNG to every visitor.
 npm run images   # src/assets/images/ → public/images/, via sharp
 ```
 
+It also builds the assets that are never hand-made: the 1200×630 social share
+card (`og-cover.jpg`) and the raster favicons rasterised from
+`public/favicon.svg`. See [`public/images/ASSETS.md`](public/images/ASSETS.md).
+
 Originals live in `src/assets/images/`; jobs are declared in
 `scripts/optimize-images.mjs`. The current run takes 21 MB down to 1.9 MB. It is
 idempotent, so re-run it after replacing any original.

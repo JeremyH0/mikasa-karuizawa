@@ -39,7 +39,24 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 ---
 
-<Layout locale={locale} ogImage="/images/hero-forest.jpg" ogImageAlt={t.hero.alt}>
+{/* The share card is a dedicated 1200x630 crop, NOT the hero.
+
+    Every platform crops an og:image to its own ratio, and handing them the
+    2560x1700 hero meant each one chose a different frame and none of them the
+    one we would. og-cover.jpg is cut to the 1.91:1 the platforms actually use,
+    so the frame that gets shared is the frame that was chosen. It is also
+    105 KB against the hero's 545 KB, which matters for LINE and WeChat, where
+    this listing will genuinely travel and where a large preview often just
+    fails to fetch.
+
+    ogImageSize is passed so og:image:width/height are emitted. Some scrapers
+    skip a preview entirely rather than download an image to measure it. */}
+<Layout
+    locale={locale}
+    ogImage="/images/og-cover.jpg"
+    ogImageSize={{ width: 1200, height: 630 }}
+    ogImageAlt={t.hero.alt}
+>
     <Navigation locale={locale} />
 
     {/*
